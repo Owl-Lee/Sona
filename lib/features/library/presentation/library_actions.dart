@@ -34,13 +34,19 @@ Future<void> playTrack(
   if (track.isVideoOnly) {
     // Opening a standalone MV before its [Video] widget has attached on
     // Windows lets audio start with no native frame sink. The shell consumes
-    // this request by mounting the player stage first.
-    ref.read(videoPlaybackRequestProvider.notifier).state =
-        VideoPlaybackRequest(
-          track: track,
-          queue: List<Track>.unmodifiable(queue),
-          source: source,
-        );
+    // this request by mounting the player stage first. Select the queue now,
+    // rather than after the native video surface is ready, so a click from
+    // "最近播放" immediately replaces an older MV-only queue.
+    ref
+        .read(playerControllerProvider.notifier)
+        .selectQueue(track, queue, source: source);
+    ref
+        .read(videoPlaybackRequestProvider.notifier)
+        .state = VideoPlaybackRequest(
+      track: track,
+      queue: List<Track>.unmodifiable(queue),
+      source: source,
+    );
     return;
   }
   await ref
