@@ -77,9 +77,7 @@ class TrackIdentifier {
     }
 
     return TrackIdentificationResult(
-      message: key.isEmpty
-          ? '没有找到足够可靠的结果。当前已完成免费公开曲库查询；声纹查询需要配置免费的 AcoustID 应用密钥。'
-          : '音频声纹和公开曲库都没有找到足够可靠的结果，已保留原信息。',
+      message: '没有找到可靠的识别结果，已保留原信息。',
       fingerprintAttempted: fingerprintAttempted,
     );
   }

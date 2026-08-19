@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/latest_request_gate.dart';
+import '../../../core/widgets/latest_snack_bar.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../cloud/application/cloud_sync_controller.dart';
 import '../../library/application/library_controller.dart';
@@ -363,7 +364,8 @@ class AccountSyncCard extends ConsumerWidget {
                 if (password.text.length < 8 ||
                     (register && !usernameValid) ||
                     (!register && !identifierValid)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  showLatestSnackBar(
+                    context,
                     SnackBar(
                       content: Text(
                         register ? '账号名格式不正确，密码至少 8 位。' : '请输入正确的账号名，密码至少 8 位。',
@@ -373,7 +375,8 @@ class AccountSyncCard extends ConsumerWidget {
                   return;
                 }
                 if (register && password.text != confirmPassword.text) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  showLatestSnackBar(
+                    context,
                     const SnackBar(content: Text('两次输入的密码不一致，请重新确认。')),
                   );
                   return;
@@ -390,13 +393,15 @@ class AccountSyncCard extends ConsumerWidget {
                         password: password.text,
                       );
                 if (success && dialogContext.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  showLatestSnackBar(
+                    context,
                     SnackBar(content: Text(register ? '账号创建成功，已登录。' : '登录成功。')),
                   );
                   Navigator.pop(dialogContext);
                 } else if (dialogContext.mounted) {
                   final error = ref.read(accountControllerProvider).error;
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  showLatestSnackBar(
+                    context,
                     SnackBar(
                       content: Text(error.isEmpty ? '操作未完成，请重试。' : error),
                     ),
@@ -536,8 +541,10 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       final localTrack = await cloud.prepareCloudTrackForPlayback(track);
       if (!mounted || !_cloudPlaybackRequests.isCurrent(request)) return;
       if (localTrack == null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('云端文件暂时不可用，请稍后重试。')));
+        showLatestSnackBar(
+          context,
+          const SnackBar(content: Text('云端文件暂时不可用，请稍后重试。')),
+        );
         return;
       }
       await ref.read(libraryControllerProvider.notifier).load();

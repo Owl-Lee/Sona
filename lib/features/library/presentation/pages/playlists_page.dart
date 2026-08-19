@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/latest_snack_bar.dart';
 import '../../../../core/widgets/liquid_glass.dart';
 import '../../application/library_controller.dart';
 import '../../domain/playlist_info.dart';
@@ -371,7 +372,8 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
     );
     if (!mounted) return;
     final skipped = selected.length - added;
-    ScaffoldMessenger.of(context).showSnackBar(
+    showLatestSnackBar(
+      context,
       SnackBar(
         content: Text(
           skipped == 0
