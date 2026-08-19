@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/latest_snack_bar.dart';
 import '../application/library_controller.dart';
 import '../domain/playlist_info.dart';
 import '../domain/track.dart';
@@ -21,8 +22,7 @@ Future<void> importMusic(
       ? await controller.importDirectory()
       : await controller.importFiles();
   if (!context.mounted || summary == null) return;
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(summary.message)));
+  showLatestSnackBar(context, SnackBar(content: Text(summary.message)));
 }
 
 Future<void> playTrack(
@@ -233,8 +233,7 @@ Future<void> _identifyTrack(
 
   final candidate = result.candidate;
   if (candidate == null) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(result.message)));
+    showLatestSnackBar(context, SnackBar(content: Text(result.message)));
     return;
   }
 
@@ -302,7 +301,8 @@ Future<void> _identifyTrack(
       .read(libraryControllerProvider.notifier)
       .applyIdentification(track, candidate);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
+  showLatestSnackBar(
+    context,
     SnackBar(content: Text('已更新为“${candidate.title}”－${candidate.artist}')),
   );
 }
@@ -350,8 +350,10 @@ Future<void> _addTrackToPlaylist(
 ) async {
   final playlists = ref.read(libraryControllerProvider).playlists;
   if (playlists.isEmpty) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('请先在“歌单”中创建一个歌单。')));
+    showLatestSnackBar(
+      context,
+      const SnackBar(content: Text('请先在“歌单”中创建一个歌单。')),
+    );
     return;
   }
   final selected = await showDialog<PlaylistInfo>(
@@ -373,7 +375,8 @@ Future<void> _addTrackToPlaylist(
       .read(libraryControllerProvider.notifier)
       .addTrackToPlaylist(selected, track);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
+  showLatestSnackBar(
+    context,
     SnackBar(content: Text(added ? '已加入“${selected.name}”' : '这首歌已经在该歌单中')),
   );
 }

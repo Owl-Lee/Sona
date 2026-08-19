@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/latest_snack_bar.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../account/presentation/account_sync_card.dart';
 import '../../library/application/library_controller.dart';
@@ -460,7 +461,8 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
     if (normalized.isNotEmpty &&
         !RegExp(r'^[A-Za-z0-9_-]{6,80}$').hasMatch(normalized)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      showLatestSnackBar(
+        context,
         const SnackBar(content: Text('这个 Application API Key 格式不正确。')),
       );
       return;
@@ -470,7 +472,8 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
         .setAcoustIdClientKey(normalized);
     if (!mounted) return;
     setState(() => _acoustIdKey = normalized);
-    ScaffoldMessenger.of(context).showSnackBar(
+    showLatestSnackBar(
+      context,
       SnackBar(content: Text(normalized.isEmpty ? '已关闭声纹联网查询' : '音频声纹已启用')),
     );
   }

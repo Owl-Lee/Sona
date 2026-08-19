@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/latest_snack_bar.dart';
 import '../../../../core/widgets/liquid_glass.dart';
 import '../../../player/application/player_controller.dart';
 import '../../../settings/application/appearance_controller.dart';
@@ -817,8 +818,7 @@ Future<void> _addTrackToPlaylistFromHome(
 ) async {
   final playlists = ref.read(libraryControllerProvider).playlists;
   if (playlists.isEmpty) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('还没有歌单')));
+    showLatestSnackBar(context, const SnackBar(content: Text('还没有歌单')));
     return;
   }
   final selected = await showDialog(
@@ -844,7 +844,8 @@ Future<void> _addTrackToPlaylistFromHome(
       .read(libraryControllerProvider.notifier)
       .addTrackToPlaylist(selected, track);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
+  showLatestSnackBar(
+    context,
     SnackBar(content: Text(added ? '已加入 ${selected.name}' : '这首歌已经在该歌单中')),
   );
 }

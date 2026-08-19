@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/item_snap_scroll_physics.dart';
+import '../../../../core/widgets/latest_snack_bar.dart';
 import '../../../../core/widgets/liquid_glass.dart';
 import '../../../../core/widgets/whole_item_viewport.dart';
 import '../../../player/application/player_controller.dart';
@@ -322,7 +323,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     final added = await controller.addTracksToPlaylist(target, selectedTracks);
     if (mounted) {
       final skipped = selectedTracks.length - added;
-      ScaffoldMessenger.of(context).showSnackBar(
+      showLatestSnackBar(
+        context,
         SnackBar(
           content: Text(
             skipped == 0
@@ -419,8 +421,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     final playlists = ref.read(libraryControllerProvider).playlists;
     if (playlists.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('请先在“歌单”中新建一个歌单。')));
+      showLatestSnackBar(
+        context,
+        const SnackBar(content: Text('请先在“歌单”中新建一个歌单。')),
+      );
       return;
     }
     final selected = await showDialog<PlaylistInfo>(
@@ -449,7 +453,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
         .read(libraryControllerProvider.notifier)
         .addTrackToPlaylist(selected, track);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    showLatestSnackBar(
+      context,
       SnackBar(content: Text(added ? '已添加到“${selected.name}”' : '这首歌已经在该歌单中')),
     );
   }
@@ -789,7 +794,8 @@ class _BatchManageDialogState extends ConsumerState<_BatchManageDialog> {
     final added = await controller.addTracksToPlaylist(target, _tracks);
     if (mounted) {
       final skipped = _tracks.length - added;
-      ScaffoldMessenger.of(context).showSnackBar(
+      showLatestSnackBar(
+        context,
         SnackBar(
           content: Text(
             skipped == 0

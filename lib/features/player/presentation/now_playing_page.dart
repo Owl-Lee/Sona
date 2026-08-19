@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/latest_snack_bar.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../library/application/library_controller.dart';
 import '../../library/domain/track.dart';
@@ -1512,8 +1513,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
     final updated = track.copyWith(videoPath: selectedPath);
     await _openMvSource(updated);
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('MV 已与这首歌配对。')));
+    showLatestSnackBar(context, const SnackBar(content: Text('MV 已与这首歌配对。')));
   }
 
   Future<void> _attachAudio(Track track) async {
@@ -1542,15 +1542,16 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
           .switchTrackSource(updated, selectedPath);
       if (!mounted) return;
       setState(() => _mode = PlayerVisualMode.vinyl);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('唱片音频已与这支 MV 配对。')));
+      showLatestSnackBar(
+        context,
+        const SnackBar(content: Text('唱片音频已与这支 MV 配对。')),
+      );
     } catch (error) {
       if (!mounted) return;
       final message = error is StateError
           ? error.message.toString()
           : '音频配对失败，请确认文件可用。';
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      showLatestSnackBar(context, SnackBar(content: Text(message)));
     }
   }
 
