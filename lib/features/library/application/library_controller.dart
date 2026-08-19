@@ -347,6 +347,13 @@ class LibraryController extends StateNotifier<LibraryState> {
     }
   }
 
+  Future<String> getAcoustIdClientKey() async =>
+      (await _database.getSetting('recognition.acoustid_client_key') ?? '')
+          .trim();
+
+  Future<void> setAcoustIdClientKey(String value) =>
+      _database.setSetting('recognition.acoustid_client_key', value.trim());
+
   Future<Track?> applyIdentification(
     Track track,
     TrackIdentificationCandidate candidate,
