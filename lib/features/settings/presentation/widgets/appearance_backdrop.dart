@@ -326,7 +326,9 @@ class _AmbientSkinPainter extends CustomPainter {
       final cycle = (progress * .18 + index * .19) % 1;
       final x = index * 191.0 % size.width + math.sin(cycle * 6) * 24;
       final y = index * 117.0 % size.height + math.cos(cycle * 5) * 16;
-      final r = 10.0 + index % 4 * 5;
+      // Larger facets remain sparse, so the glass reads as calm refraction
+      // instead of a layer of confetti on top of the wallpaper.
+      final r = 14.0 + index % 4 * 6;
       final facet = Path()
         ..moveTo(x, y - r)
         ..lineTo(x + r * .7, y + r * .55)
@@ -375,6 +377,8 @@ class _AmbientSkinPainter extends CustomPainter {
 
   void _paintBloomPetals(Canvas canvas, Size size) {
     final count = size.shortestSide >= 700 ? 12 : 8;
+    final petalWidth = size.shortestSide >= 700 ? 25.0 : 22.0;
+    final petalHeight = size.shortestSide >= 700 ? 11.0 : 9.5;
     for (var index = 0; index < count; index++) {
       final cycle = (progress * .31 + index * .19) % 1;
       final x = index * 173.0 % size.width + math.sin(cycle * 5) * 20;
@@ -383,7 +387,11 @@ class _AmbientSkinPainter extends CustomPainter {
       canvas.translate(x, y);
       canvas.rotate(index + cycle * 5);
       canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: 18, height: 8),
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: petalWidth,
+          height: petalHeight,
+        ),
         Paint()..color = const Color(0xFFFFD1CF).withValues(alpha: .25),
       );
       canvas.restore();
