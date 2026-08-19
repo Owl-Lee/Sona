@@ -879,12 +879,11 @@ class _RankingPreview extends ConsumerWidget {
     // second ranking row visibly chopped in half on short displays. The full
     // list remains one tap away through "查看全部".
     final items = ranked.take(desktop ? 6 : 1).toList(growable: false);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.outline),
-      ),
+    return LiquidGlass(
+      tint: ref.watch(appearanceControllerProvider).accent,
+      borderRadius: 18,
+      blur: 18,
+      padding: EdgeInsets.zero,
       child: Material(
         type: MaterialType.transparency,
         child: Column(
@@ -892,9 +891,19 @@ class _RankingPreview extends ConsumerWidget {
             for (var index = 0; index < items.length; index++)
               Padding(
                 padding: EdgeInsets.fromLTRB(6, index == 0 ? 6 : 2, 6, 4),
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.28),
-                  borderRadius: BorderRadius.circular(14),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.44),
+                        Colors.white.withValues(alpha: 0.20),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.52),
+                    ),
+                  ),
                   child: ListTile(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -934,11 +943,29 @@ class _RankingPreview extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    trailing: Text(
-                      '${items[index].playCount} 次',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.accent.withValues(alpha: 0.24),
+                            Colors.white.withValues(alpha: 0.44),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.36),
+                        ),
+                      ),
+                      child: Text(
+                        '${items[index].playCount} 次',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     onTap: () =>

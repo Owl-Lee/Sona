@@ -127,6 +127,10 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
 
   final SupabaseClient? _client;
   final LibraryDatabase _database;
+  // Repeated taps must share one cache download/database insertion. Otherwise
+  // two downloads of the same file can race and make a healthy cloud look
+  // offline.
+  final Map<String, Future<Track?>> _pendingPlaybackPreparations = {};
 
   Future<void> loadCloudTracks() async {
     final client = _client;
@@ -225,7 +229,38 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
   /// starts immediately; a cloud-only item is downloaded once into Sona's
   /// managed cache before playback. This keeps the player itself offline-first
   /// and avoids streaming a fragile remote URL directly into the audio engine.
-  Future<Track?> prepareCloudTrackForPlayback(CloudTrackSummary track) async {
+  Future<Track?> prepareCloudTrackForPlayback(CloudTrackSummary track) {
+    final pending = _pendingPlaybackPreparations[track.contentHash];
+    if (pending != null) return pending;
+    late final Future<Track?> request;
+    request = _prepareCloudTrackForPlayback(track);
+    _pendingPlaybackPreparations[track.contentHash] = request;
+    return request.whenComplete(() {
+      if (identical(_pendingPlaybackPreparations[track.contentHash], request)) {
+        _pendingPlaybackPreparations.remove(track.contentHash);
+      }
+    });
+  }
+
+  /// A cloud queue may contain only ready cloud cache entries, never unrelated
+  /// local-library tracks or files which have not finished downloading.
+  Future<List<Track>> cachedCloudTracksForPlayback(
+    Iterable<CloudTrackSummary> cloudTracks,
+  ) async {
+    final localByHash = <String, Track>{
+      for (final track in await _database.getTracks())
+        if (File(track.path).existsSync()) track.contentHash: track,
+    };
+    final seen = <String>{};
+    return [
+      for (final cloud in cloudTracks)
+        if (seen.add(cloud.contentHash) &&
+            localByHash[cloud.contentHash] != null)
+          localByHash[cloud.contentHash]!,
+    ];
+  }
+
+  Future<Track?> _prepareCloudTrackForPlayback(CloudTrackSummary track) async {
     final localTracks = await _database.getTracks();
     for (final local in localTracks) {
       if (local.contentHash == track.contentHash &&
