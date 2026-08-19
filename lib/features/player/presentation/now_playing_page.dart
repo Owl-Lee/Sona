@@ -2394,6 +2394,26 @@ class PlayerInformation extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              IconButton(
+                tooltip: track?.isFavorite == true ? '取消收藏' : '收藏',
+                onPressed: track == null
+                    ? null
+                    : () => library.toggleFavorite(track!),
+                color: track?.isFavorite == true
+                    ? accent
+                    : Colors.white.withValues(alpha: 0.88),
+                iconSize: compact ? 29 : 37,
+                visualDensity: VisualDensity.compact,
+                constraints: compact
+                    ? const BoxConstraints.tightFor(width: 34, height: 44)
+                    : null,
+                padding: compact ? EdgeInsets.zero : null,
+                icon: Icon(
+                  track?.isFavorite == true
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                ),
+              ),
               PlaybackModeButton(
                 enabled: track != null,
                 color: Colors.white.withValues(alpha: 0.88),
@@ -2452,26 +2472,6 @@ class PlayerInformation extends ConsumerWidget {
                   accent: accent,
                   compact: compact,
                 ),
-              IconButton(
-                tooltip: track?.isFavorite == true ? '取消收藏' : '收藏',
-                onPressed: track == null
-                    ? null
-                    : () => library.toggleFavorite(track!),
-                color: track?.isFavorite == true
-                    ? accent
-                    : Colors.white.withValues(alpha: 0.88),
-                iconSize: compact ? 29 : 37,
-                visualDensity: VisualDensity.compact,
-                constraints: compact
-                    ? const BoxConstraints.tightFor(width: 34, height: 44)
-                    : null,
-                padding: compact ? EdgeInsets.zero : null,
-                icon: Icon(
-                  track?.isFavorite == true
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                ),
-              ),
             ],
           ),
       ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/latest_request_gate.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../cloud/application/cloud_sync_controller.dart';
 import '../../library/application/library_controller.dart';
@@ -476,6 +477,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
   var _filter = _CloudMediaFilter.all;
   var _sort = _CloudTrackSort.recent;
   String? _openingCloudTrackId;
+  final _cloudPlaybackRequests = LatestRequestGate();
 
   @override
   void initState() {
@@ -523,27 +525,33 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
     }
   }
 
-  Future<void> _playCloudTrack(CloudTrackSummary track) async {
-    if (_openingCloudTrackId != null) return;
+  Future<void> _playCloudTrack(
+    CloudTrackSummary track,
+    List<CloudTrackSummary> queueCandidates,
+  ) async {
+    final request = _cloudPlaybackRequests.begin();
     setState(() => _openingCloudTrackId = track.id);
     try {
-      final localTrack = await ref
-          .read(cloudSyncControllerProvider.notifier)
-          .prepareCloudTrackForPlayback(track);
+      final cloud = ref.read(cloudSyncControllerProvider.notifier);
+      final localTrack = await cloud.prepareCloudTrackForPlayback(track);
+      if (!mounted || !_cloudPlaybackRequests.isCurrent(request)) return;
       if (localTrack == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('云端文件暂时不可用，请连接网络后重试。')));
-        }
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('云端文件暂时不可用，请稍后重试。')));
         return;
       }
       await ref.read(libraryControllerProvider.notifier).load();
-      if (!mounted) return;
-      final queue = ref.read(libraryControllerProvider).tracks;
+      if (!mounted || !_cloudPlaybackRequests.isCurrent(request)) return;
+      final queue = await cloud.cachedCloudTracksForPlayback(queueCandidates);
+      if (!mounted || !_cloudPlaybackRequests.isCurrent(request)) return;
+      if (queue.every((item) => item.contentHash != localTrack.contentHash)) {
+        queue.insert(0, localTrack);
+      }
       await playTrack(ref, localTrack, queue, source: '云端资料库');
     } finally {
-      if (mounted) setState(() => _openingCloudTrackId = null);
+      if (mounted && _cloudPlaybackRequests.isCurrent(request)) {
+        setState(() => _openingCloudTrackId = null);
+      }
     }
   }
 
@@ -676,7 +684,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
                 opening: _openingCloudTrackId == track.id,
                 subtitle:
                     '${_displayArtist(track)} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
-                onPlay: () => _playCloudTrack(track),
+                onPlay: () => _playCloudTrack(track, tracks),
                 onDelete: () => _confirmDelete(track),
               );
             }
@@ -699,7 +707,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
                 opening: _openingCloudTrackId == track.id,
                 subtitle:
                     '${track.album.isEmpty ? '未标注专辑' : track.album} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
-                onPlay: () => _playCloudTrack(track),
+                onPlay: () => _playCloudTrack(track, group.value),
                 onDelete: () => _confirmDelete(track),
               ),
             );

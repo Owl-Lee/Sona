@@ -6,6 +6,7 @@ import 'package:audio_service/audio_service.dart' as system_audio;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart' hide Track;
 
+import '../../../core/utils/latest_request_gate.dart';
 import '../../library/domain/track.dart';
 import '../../library/application/library_controller.dart';
 import 'sona_audio_handler.dart';
@@ -193,7 +194,11 @@ class PlayerController extends StateNotifier<PlaybackState> {
   var _handlingCompletion = false;
   Duration? _pendingSeekPosition;
   DateTime? _pendingSeekRequestedAt;
-  var _sourceRequest = 0;
+  final _sourceRequests = LatestRequestGate();
+  // media_kit's native open calls are not safe to overlap. A quick sequence
+  // of next/previous taps therefore queues native work, while request ids make
+  // every stale queued operation a no-op.
+  Future<void> _nativeOpenTail = Future<void>.value();
   // The Player is shared by the mini player and the full-screen player. Keep
   // the file it already has open so presenting a new video texture never
   // mistakes a UI transition for a request to restart the media.
@@ -212,7 +217,7 @@ class PlayerController extends StateNotifier<PlaybackState> {
   void selectQueue(Track track, List<Track> queue, {String source = '本地曲库'}) {
     // Cancel an earlier deferred open. The following playTrack call creates
     // its own request after the video surface is ready.
-    ++_sourceRequest;
+    _sourceRequests.begin();
     _replaceQueue(track, queue);
     state = state.copyWith(queueSource: source, errorMessage: '');
   }
@@ -228,7 +233,8 @@ class PlayerController extends StateNotifier<PlaybackState> {
       _onVideoTrackRequested(track, _queue, source);
       return;
     }
-    final request = ++_sourceRequest;
+    final previousState = state;
+    final request = _sourceRequests.begin();
     _replaceQueue(track, queue);
     state = state.copyWith(
       currentTrack: track,
@@ -237,10 +243,12 @@ class PlayerController extends StateNotifier<PlaybackState> {
       queueSource: source,
       errorMessage: '',
     );
-    final opened = await _openSingleTrack(track, play: true);
-    if (request != _sourceRequest) return;
+    final opened = await _openSingleTrack(track, play: true, request: request);
+    if (!_sourceRequests.isCurrent(request)) return;
     if (!opened) {
-      await _clearCurrentTrack('找不到“${track.title}”的本地文件。它可能被移动或删除。');
+      state = previousState.copyWith(
+        errorMessage: '无法打开“${track.title}”。已保留上一首歌曲。',
+      );
       return;
     }
     _startListeningSession(track, force: true);
@@ -320,7 +328,8 @@ class PlayerController extends StateNotifier<PlaybackState> {
       state = state.copyWith(currentTrack: track, errorMessage: '');
       return;
     }
-    final request = ++_sourceRequest;
+    final previousState = state;
+    final request = _sourceRequests.begin();
     final position = state.position;
     final wasPlaying = state.isPlaying;
     if (_queue.isEmpty) _queue = [track];
@@ -339,10 +348,17 @@ class PlayerController extends StateNotifier<PlaybackState> {
       // new source immediately causes a visible jump back to 0:00 whenever a
       // track switches between the MV and vinyl surfaces.
       play: false,
+      request: request,
     );
-    if (request != _sourceRequest || !opened) return;
+    if (!_sourceRequests.isCurrent(request)) return;
+    if (!opened) {
+      state = previousState.copyWith(
+        errorMessage: '无法打开“${track.title}”的本地文件。',
+      );
+      return;
+    }
     if (position > Duration.zero) await _player.seek(position);
-    if (request != _sourceRequest) return;
+    if (!_sourceRequests.isCurrent(request)) return;
     if (wasPlaying) await _player.play();
   }
 
@@ -363,25 +379,40 @@ class PlayerController extends StateNotifier<PlaybackState> {
     Track track, {
     String? path,
     required bool play,
+    int? request,
   }) async {
-    final mediaPath = path ?? track.path;
-    if (!await File(mediaPath).exists()) {
-      return false;
+    Future<bool> open() async {
+      if (request != null && !_sourceRequests.isCurrent(request)) return false;
+      final mediaPath = path ?? track.path;
+      if (!await File(mediaPath).exists()) return false;
+      if (request != null && !_sourceRequests.isCurrent(request)) return false;
+      try {
+        await _player.open(
+          Media(
+            mediaPath,
+            extras: {
+              'track_id': track.id,
+              'title': track.title,
+              'artist': track.artist,
+            },
+          ),
+          play: play,
+        );
+      } catch (_) {
+        return false;
+      }
+      if (request != null && !_sourceRequests.isCurrent(request)) return false;
+      _activeSourcePath = mediaPath;
+      unawaited(_hydrateDuration(track));
+      return true;
     }
-    await _player.open(
-      Media(
-        mediaPath,
-        extras: {
-          'track_id': track.id,
-          'title': track.title,
-          'artist': track.artist,
-        },
-      ),
-      play: play,
+
+    final scheduled = _nativeOpenTail.then(
+      (_) => open(),
+      onError: (_) => open(),
     );
-    _activeSourcePath = mediaPath;
-    unawaited(_hydrateDuration(track));
-    return true;
+    _nativeOpenTail = scheduled.then<void>((_) {}, onError: (_) {});
+    return scheduled;
   }
 
   bool _isActiveSource(Track track, String sourcePath) {
@@ -441,17 +472,24 @@ class PlayerController extends StateNotifier<PlaybackState> {
     final safeIndex = currentIndex < 0 ? 0 : currentIndex;
     final nextIndex = _nextQueueIndex(safeIndex, forward: forward);
     final nextTrack = _queue[nextIndex];
-    final request = ++_sourceRequest;
+    final previousState = state;
+    final request = _sourceRequests.begin();
     state = state.copyWith(
       currentTrack: nextTrack,
       position: Duration.zero,
       duration: nextTrack.duration,
       errorMessage: '',
     );
-    final opened = await _openSingleTrack(nextTrack, play: true);
-    if (request != _sourceRequest) return;
+    final opened = await _openSingleTrack(
+      nextTrack,
+      play: true,
+      request: request,
+    );
+    if (!_sourceRequests.isCurrent(request)) return;
     if (!opened) {
-      await _clearCurrentTrack('找不到“${nextTrack.title}”的本地文件。它可能被移动或删除。');
+      state = previousState.copyWith(
+        errorMessage: '下一首“${nextTrack.title}”暂时无法打开，已保留当前歌曲。',
+      );
       return;
     }
     _startListeningSession(nextTrack, force: true);
@@ -513,7 +551,7 @@ class PlayerController extends StateNotifier<PlaybackState> {
   }
 
   Future<void> _clearCurrentTrack(String message) async {
-    ++_sourceRequest;
+    _sourceRequests.begin();
     _sessionTrackId = null;
     _lastObservedPosition = null;
     _heardSeconds.clear();
