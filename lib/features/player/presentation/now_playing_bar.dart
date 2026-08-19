@@ -321,13 +321,6 @@ class NowPlayingBar extends ConsumerWidget {
                                     activeColor: accent,
                                   ),
                                   IconButton(
-                                    tooltip: '播放队列请在完整播放器中查看',
-                                    onPressed: () => _openPlayer(context),
-                                    icon: const Icon(Icons.queue_music_rounded),
-                                    color: mutedForeground,
-                                    iconSize: 31,
-                                  ),
-                                  IconButton(
                                     tooltip: '上一首',
                                     onPressed: controller.previous,
                                     icon: const Icon(
@@ -361,6 +354,17 @@ class NowPlayingBar extends ConsumerWidget {
                                     tooltip: '下一首',
                                     onPressed: controller.next,
                                     icon: const Icon(Icons.skip_next_rounded),
+                                    color: mutedForeground,
+                                    iconSize: 31,
+                                  ),
+                                  IconButton(
+                                    tooltip: '播放队列',
+                                    onPressed: () =>
+                                        PlayerInformation.showQueue(
+                                          context,
+                                          ref,
+                                        ),
+                                    icon: const Icon(Icons.queue_music_rounded),
                                     color: mutedForeground,
                                     iconSize: 31,
                                   ),
