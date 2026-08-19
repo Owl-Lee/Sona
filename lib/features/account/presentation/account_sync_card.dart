@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../cloud/application/cloud_sync_controller.dart';
 import '../../library/application/library_controller.dart';
+import '../../library/presentation/library_actions.dart';
 import '../../settings/application/appearance_controller.dart';
 import '../../settings/presentation/widgets/image_crop_dialog.dart';
 import '../application/account_controller.dart';
@@ -474,6 +475,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
   var _view = _CloudLibraryView.tracks;
   var _filter = _CloudMediaFilter.all;
   var _sort = _CloudTrackSort.recent;
+  String? _openingCloudTrackId;
 
   @override
   void initState() {
@@ -518,6 +520,30 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       await ref
           .read(cloudSyncControllerProvider.notifier)
           .deleteCloudTrack(track);
+    }
+  }
+
+  Future<void> _playCloudTrack(CloudTrackSummary track) async {
+    if (_openingCloudTrackId != null) return;
+    setState(() => _openingCloudTrackId = track.id);
+    try {
+      final localTrack = await ref
+          .read(cloudSyncControllerProvider.notifier)
+          .prepareCloudTrackForPlayback(track);
+      if (localTrack == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('云端文件暂时不可用，请连接网络后重试。')));
+        }
+        return;
+      }
+      await ref.read(libraryControllerProvider.notifier).load();
+      if (!mounted) return;
+      final queue = ref.read(libraryControllerProvider).tracks;
+      await playTrack(ref, localTrack, queue, source: '云端资料库');
+    } finally {
+      if (mounted) setState(() => _openingCloudTrackId = null);
     }
   }
 
@@ -647,8 +673,10 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
               return _CloudTrackRow(
                 track: track,
                 removing: sync.removingCloudTrackId == track.id,
+                opening: _openingCloudTrackId == track.id,
                 subtitle:
                     '${_displayArtist(track)} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
+                onPlay: () => _playCloudTrack(track),
                 onDelete: () => _confirmDelete(track),
               );
             }
@@ -668,8 +696,10 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
               itemBuilder: (track) => _CloudTrackRow(
                 track: track,
                 removing: sync.removingCloudTrackId == track.id,
+                opening: _openingCloudTrackId == track.id,
                 subtitle:
                     '${track.album.isEmpty ? '未标注专辑' : track.album} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
+                onPlay: () => _playCloudTrack(track),
                 onDelete: () => _confirmDelete(track),
               ),
             );
@@ -1078,13 +1108,17 @@ class _CloudTrackRow extends StatelessWidget {
   const _CloudTrackRow({
     required this.track,
     required this.removing,
+    required this.opening,
     required this.subtitle,
+    required this.onPlay,
     required this.onDelete,
   });
 
   final CloudTrackSummary track;
   final bool removing;
+  final bool opening;
   final String subtitle;
+  final VoidCallback onPlay;
   final VoidCallback onDelete;
 
   @override
@@ -1095,51 +1129,79 @@ class _CloudTrackRow extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: [
-          Icon(
-            track.mediaType == 'video'
-                ? Icons.movie_outlined
-                : Icons.music_note_rounded,
-            color: AppColors.accent,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  track.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: opening || removing ? null : onPlay,
+        onSecondaryTapDown: opening || removing
+            ? null
+            : (details) async {
+                final action = await showMenu<String>(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    details.globalPosition.dx,
+                    details.globalPosition.dy,
+                    0,
+                    0,
                   ),
-                ),
-              ],
+                  items: const [
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: ListTile(
+                        dense: true,
+                        leading: Icon(Icons.delete_outline_rounded),
+                        title: Text('从云端删除'),
+                      ),
+                    ),
+                  ],
+                );
+                if (action == 'delete') onDelete();
+              },
+        child: Row(
+          children: [
+            Icon(
+              track.mediaType == 'video'
+                  ? Icons.movie_outlined
+                  : Icons.music_note_rounded,
+              color: AppColors.accent,
             ),
-          ),
-          IconButton(
-            tooltip: '删除云副本',
-            onPressed: removing ? null : onDelete,
-            icon: removing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.delete_outline_rounded),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    track.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: '从云端删除',
+              onPressed: removing || opening ? null : onDelete,
+              icon: removing || opening
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline_rounded),
+            ),
+          ],
+        ),
       ),
     );
   }

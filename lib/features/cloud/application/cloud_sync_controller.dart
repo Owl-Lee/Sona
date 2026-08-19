@@ -139,11 +139,7 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
       );
       return;
     }
-    state = state.copyWith(
-      loadingCloudTracks: true,
-      offline: false,
-      error: '',
-    );
+    state = state.copyWith(loadingCloudTracks: true, offline: false, error: '');
     try {
       final spaceId = await _spaceId(client, user.id);
       final rows = _rows(
@@ -225,6 +221,66 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
     }
   }
 
+  /// Resolves a cloud item into a local playable track. Existing local media
+  /// starts immediately; a cloud-only item is downloaded once into Sona's
+  /// managed cache before playback. This keeps the player itself offline-first
+  /// and avoids streaming a fragile remote URL directly into the audio engine.
+  Future<Track?> prepareCloudTrackForPlayback(CloudTrackSummary track) async {
+    final localTracks = await _database.getTracks();
+    for (final local in localTracks) {
+      if (local.contentHash == track.contentHash &&
+          File(local.path).existsSync()) {
+        return local;
+      }
+    }
+
+    final client = _client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) return null;
+    try {
+      final spaceId = await _spaceId(client, user.id);
+      final remoteRows = _rows(
+        await _withCloudTimeout(
+          client
+              .from('cloud_tracks')
+              .select()
+              .eq('id', track.id)
+              .eq('space_id', spaceId),
+        ),
+      );
+      if (remoteRows.isEmpty) return null;
+      final remote = remoteRows.first;
+      final stateRows = _rows(
+        await _withCloudTimeout(
+          client
+              .from('user_track_state')
+              .select()
+              .eq('user_id', user.id)
+              .eq('track_id', track.id),
+        ),
+      );
+      await _downloadTrack(
+        client,
+        remote,
+        stateRows.isEmpty ? null : stateRows.first,
+      );
+      final refreshedTracks = await _database.getTracks();
+      for (final local in refreshedTracks) {
+        if (local.contentHash == track.contentHash &&
+            File(local.path).existsSync()) {
+          return local;
+        }
+      }
+      return null;
+    } catch (error) {
+      state = state.copyWith(
+        error: _friendlyError(error),
+        offline: _isOfflineFailure(error),
+      );
+      return null;
+    }
+  }
+
   Future<bool> previewSync(LibraryState library) async {
     final client = _client;
     final user = client?.auth.currentUser;
@@ -268,10 +324,7 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
           .length;
       final remotePlaylists = _rows(
         await _withCloudTimeout(
-          client
-              .from('cloud_playlists')
-              .select('id')
-              .eq('space_id', spaceId),
+          client.from('cloud_playlists').select('id').eq('space_id', spaceId),
         ),
       );
       final localCloudIds = library.playlists
