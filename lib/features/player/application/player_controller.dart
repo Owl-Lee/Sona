@@ -441,13 +441,6 @@ class PlayerController extends StateNotifier<PlaybackState> {
     final safeIndex = currentIndex < 0 ? 0 : currentIndex;
     final nextIndex = _nextQueueIndex(safeIndex, forward: forward);
     final nextTrack = _queue[nextIndex];
-    if (nextTrack.isVideoOnly) {
-      // Every route, including next/previous and media-key navigation, must
-      // prepare the native video surface before the MV file is opened.
-      ++_sourceRequest;
-      _onVideoTrackRequested(nextTrack, _queue, state.queueSource);
-      return;
-    }
     final request = ++_sourceRequest;
     state = state.copyWith(
       currentTrack: nextTrack,

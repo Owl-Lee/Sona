@@ -645,6 +645,12 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
     );
     _videoController = VideoController(
       ref.read(playerControllerProvider.notifier).player,
+      // Several local MV files decode audio but render black through the
+      // Windows GPU texture path. CPU output is more conservative, but keeps
+      // the displayed frame reliable across the machines we support.
+      configuration: const VideoControllerConfiguration(
+        enableHardwareAcceleration: false,
+      ),
     );
     final request = widget.autoplayRequest;
     if (request != null) {
@@ -3182,7 +3188,14 @@ class _MvStage extends ConsumerWidget {
         children: [
           // Deliberately no tap handler here: clicking the MV is not a pause
           // gesture. Playback is controlled from the compact strip below.
-          Video(controller: controller, controls: NoVideoControls),
+          // Recreate the texture widget when the queue advances. Reusing one
+          // native texture for a new media source is what left the previous
+          // MV frame (or a black frame) on screen while audio had changed.
+          Video(
+            key: ValueKey('mv-output-${track?.id}'),
+            controller: controller,
+            controls: NoVideoControls,
+          ),
           IgnorePointer(
             child: AnimatedOpacity(
               opacity: videoReady ? 0 : 1,
