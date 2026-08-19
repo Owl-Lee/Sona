@@ -9,6 +9,7 @@ import 'package:media_kit/media_kit.dart' hide Track;
 import '../../library/domain/track.dart';
 import '../../library/application/library_controller.dart';
 import 'sona_audio_handler.dart';
+import 'video_playback_request.dart';
 
 final playerControllerProvider =
     StateNotifierProvider<PlayerController, PlaybackState>((ref) {
@@ -24,6 +25,15 @@ final playerControllerProvider =
               listenedDuration: listened,
               mediaDuration: duration,
             ),
+        onVideoTrackRequested: (track, queue, source) {
+          ref
+              .read(videoPlaybackRequestProvider.notifier)
+              .state = VideoPlaybackRequest(
+            track: track,
+            queue: List<Track>.unmodifiable(queue),
+            source: source,
+          );
+        },
       );
       audioHandler.attach(
         play: controller.play,
@@ -118,9 +128,14 @@ class PlaybackState {
 }
 
 class PlayerController extends StateNotifier<PlaybackState> {
-  PlayerController({required this._onTrackSelected, required this._onValidPlay})
-    : _player = Player(configuration: const PlayerConfiguration(title: 'Sona')),
-      super(const PlaybackState()) {
+  PlayerController({
+    required this._onTrackSelected,
+    required this._onValidPlay,
+    required this._onVideoTrackRequested,
+  }) : _player = Player(
+         configuration: const PlayerConfiguration(title: 'Sona'),
+       ),
+       super(const PlaybackState()) {
     _subscriptions.add(
       _player.stream.playing.listen((playing) {
         if (state.currentTrack == null) return;
@@ -164,6 +179,7 @@ class PlayerController extends StateNotifier<PlaybackState> {
   final Player _player;
   final Future<void> Function(Track) _onTrackSelected;
   final Future<void> Function(Track, Duration, Duration) _onValidPlay;
+  final void Function(Track, List<Track>, String) _onVideoTrackRequested;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   List<Track> _queue = const [];
   double _volumeBeforeMute = 80;
@@ -205,7 +221,13 @@ class PlayerController extends StateNotifier<PlaybackState> {
     Track track,
     List<Track> queue, {
     String source = '本地曲库',
+    bool videoSurfaceReady = false,
   }) async {
+    if (track.isVideoOnly && !videoSurfaceReady) {
+      selectQueue(track, queue, source: source);
+      _onVideoTrackRequested(track, _queue, source);
+      return;
+    }
     final request = ++_sourceRequest;
     _replaceQueue(track, queue);
     state = state.copyWith(
@@ -419,6 +441,13 @@ class PlayerController extends StateNotifier<PlaybackState> {
     final safeIndex = currentIndex < 0 ? 0 : currentIndex;
     final nextIndex = _nextQueueIndex(safeIndex, forward: forward);
     final nextTrack = _queue[nextIndex];
+    if (nextTrack.isVideoOnly) {
+      // Every route, including next/previous and media-key navigation, must
+      // prepare the native video surface before the MV file is opened.
+      ++_sourceRequest;
+      _onVideoTrackRequested(nextTrack, _queue, state.queueSource);
+      return;
+    }
     final request = ++_sourceRequest;
     state = state.copyWith(
       currentTrack: nextTrack,
