@@ -889,55 +889,63 @@ class _RankingPreview extends ConsumerWidget {
         type: MaterialType.transparency,
         child: Column(
           children: [
-            for (var index = 0; index < items.length; index++) ...[
-              ListTile(
-                dense: true,
-                leading: SizedBox(
-                  width: 68,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 19,
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            color: index == 0
-                                ? AppColors.accent
-                                : AppColors.textSecondary,
-                            fontWeight: FontWeight.w800,
+            for (var index = 0; index < items.length; index++)
+              Padding(
+                padding: EdgeInsets.fromLTRB(6, index == 0 ? 6 : 2, 6, 4),
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    dense: true,
+                    leading: SizedBox(
+                      width: 68,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 19,
+                            child: Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                color: index == 0
+                                    ? AppColors.accent
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
-                        ),
+                          TrackArtwork(
+                            track: items[index],
+                            size: 46,
+                            borderRadius: 10,
+                          ),
+                        ],
                       ),
-                      TrackArtwork(
-                        track: items[index],
-                        size: 46,
-                        borderRadius: 10,
+                    ),
+                    title: Text(
+                      items[index].title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      items[index].artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Text(
+                      '${items[index].playCount} 次',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
+                    ),
+                    onTap: () =>
+                        playTrack(ref, items[index], ranked, source: '听歌排行'),
                   ),
                 ),
-                title: Text(
-                  items[index].title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  items[index].artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Text(
-                  '${items[index].playCount} 次',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                onTap: () =>
-                    playTrack(ref, items[index], ranked, source: '听歌排行'),
               ),
-              if (index != items.length - 1) const Divider(height: 1),
-            ],
           ],
         ),
       ),

@@ -386,6 +386,8 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
   @override
   Widget build(BuildContext context) {
     final mobile = MediaQuery.sizeOf(context).width < 760;
+    final appearance = ref.watch(appearanceControllerProvider);
+    final darkGlass = _usesDarkGlass(appearance.accent);
     // These header actions are rendered directly over the wallpaper.  Do not
     // fall back to the ambient icon theme here: on dark presets it can turn
     // the icon-only actions almost invisible while the text actions remain
@@ -580,9 +582,9 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
                         ),
                       );
                     }
-                    return ListView.separated(
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 10),
                       itemCount: tracks.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final track = tracks[index];
                         final selected = _selected.contains(track.id);
@@ -603,52 +605,69 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
                                 if (mounted) setState(_reload);
                               },
                             );
-                        return GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onSecondaryTapDown: _selecting
-                              ? null
-                              : (details) =>
-                                    showActions(details.globalPosition),
-                          child: ListTile(
-                            leading: _selecting
-                                ? Checkbox(
-                                    value: selected,
-                                    onChanged: (_) => setState(
-                                      () => selected
-                                          ? _selected.remove(track.id)
-                                          : _selected.add(track.id!),
-                                    ),
-                                  )
-                                : TrackArtwork(
-                                    track: track,
-                                    size: 45,
-                                    borderRadius: 11,
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                            color: selected
+                                ? appearance.accent.withValues(alpha: 0.16)
+                                : Colors.white.withValues(
+                                    alpha: darkGlass ? 0.08 : 0.16,
                                   ),
-                            title: Text(
-                              track.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            borderRadius: BorderRadius.circular(15),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onSecondaryTapDown: _selecting
+                                  ? null
+                                  : (details) =>
+                                        showActions(details.globalPosition),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                leading: _selecting
+                                    ? Checkbox(
+                                        value: selected,
+                                        onChanged: (_) => setState(
+                                          () => selected
+                                              ? _selected.remove(track.id)
+                                              : _selected.add(track.id!),
+                                        ),
+                                      )
+                                    : TrackArtwork(
+                                        track: track,
+                                        size: 45,
+                                        borderRadius: 11,
+                                      ),
+                                title: Text(
+                                  track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(track.artist),
+                                trailing: Text(formatDuration(track.duration)),
+                                onLongPress: _selecting ? null : showActions,
+                                onTap: _selecting
+                                    ? () => setState(
+                                        () => selected
+                                            ? _selected.remove(track.id)
+                                            : _selected.add(track.id!),
+                                      )
+                                    : () {
+                                        playTrack(
+                                          ref,
+                                          track,
+                                          tracks,
+                                          source: '歌单《${widget.playlist.name}》',
+                                        );
+                                        if (!widget.embedded) {
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                              ),
                             ),
-                            subtitle: Text(track.artist),
-                            trailing: Text(formatDuration(track.duration)),
-                            onLongPress: _selecting ? null : showActions,
-                            onTap: _selecting
-                                ? () => setState(
-                                    () => selected
-                                        ? _selected.remove(track.id)
-                                        : _selected.add(track.id!),
-                                  )
-                                : () {
-                                    playTrack(
-                                      ref,
-                                      track,
-                                      tracks,
-                                      source: '歌单《${widget.playlist.name}》',
-                                    );
-                                    if (!widget.embedded) {
-                                      Navigator.pop(context);
-                                    }
-                                  },
                           ),
                         );
                       },
@@ -673,8 +692,6 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
       },
       child: content,
     );
-    final appearance = ref.watch(appearanceControllerProvider);
-    final darkGlass = _usesDarkGlass(appearance.accent);
     if (widget.embedded) {
       // Keep playlist details in the same glass language as the library pages.
       // The outer inset also keeps the page visually separate from the player.
