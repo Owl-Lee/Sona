@@ -20,6 +20,7 @@ import '../../settings/presentation/widgets/appearance_backdrop.dart';
 import '../application/player_controller.dart';
 import '../application/video_playback_request.dart';
 import 'hover_volume_button.dart';
+import 'now_playing_track_resolver.dart';
 import 'vinyl_record.dart';
 import 'playback_mode_button.dart';
 
@@ -635,6 +636,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
   bool _mvSurfaceReady = false;
   bool _mvSurfaceTimedOut = false;
   String _mvSurfaceStatus = '正在准备 MV 画面';
+  bool _initialVideoRequestPending = false;
 
   @override
   void initState() {
@@ -658,6 +660,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
       // Player.open. This is the ordering Windows needs for the first MV.
       _visualTrackId = request.track.id;
       _mode = PlayerVisualMode.musicVideo;
+      _initialVideoRequestPending = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_startRequestedVideo(request));
       });
@@ -677,14 +680,14 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
     final appearance = ref.watch(appearanceControllerProvider);
     // A video-only request mounts this page before the native video surface is
     // ready, so [playback.currentTrack] can still be the song that was playing
-    // a moment ago. Prefer the requested MV during that hand-off; otherwise
-    // the page briefly rebuilds as the old song's vinyl view and loses its MV
-    // presentation mode.
+    // a moment ago. Prefer the requested MV only during that hand-off. Once it
+    // settles, the controller must drive every later queue selection.
     final requestedTrack = widget.autoplayRequest?.track;
-    final sourceTrack =
-        requestedTrack != null && playback.currentTrack?.id != requestedTrack.id
-        ? requestedTrack
-        : (playback.currentTrack ?? requestedTrack);
+    final sourceTrack = resolveNowPlayingDisplayTrack(
+      currentTrack: playback.currentTrack,
+      requestedTrack: requestedTrack,
+      isInitialVideoRequestPending: _initialVideoRequestPending,
+    );
     final track = sourceTrack == null
         ? null
         : library.tracks.cast<Track?>().firstWhere(
@@ -1303,6 +1306,10 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
       _markMvSurfaceWaitingTooLong(surfaceRequest, track);
     } catch (error, stackTrace) {
       _markMvSurfaceFailed(surfaceRequest, track, error, stackTrace);
+    } finally {
+      if (mounted && _initialVideoRequestPending) {
+        setState(() => _initialVideoRequestPending = false);
+      }
     }
   }
 
