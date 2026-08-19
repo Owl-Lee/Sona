@@ -668,7 +668,16 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
     final playback = ref.watch(playerControllerProvider);
     final library = ref.watch(libraryControllerProvider);
     final appearance = ref.watch(appearanceControllerProvider);
-    final sourceTrack = playback.currentTrack ?? widget.autoplayRequest?.track;
+    // A video-only request mounts this page before the native video surface is
+    // ready, so [playback.currentTrack] can still be the song that was playing
+    // a moment ago. Prefer the requested MV during that hand-off; otherwise
+    // the page briefly rebuilds as the old song's vinyl view and loses its MV
+    // presentation mode.
+    final requestedTrack = widget.autoplayRequest?.track;
+    final sourceTrack =
+        requestedTrack != null && playback.currentTrack?.id != requestedTrack.id
+        ? requestedTrack
+        : (playback.currentTrack ?? requestedTrack);
     final track = sourceTrack == null
         ? null
         : library.tracks.cast<Track?>().firstWhere(
