@@ -6,7 +6,6 @@ import '../application/library_controller.dart';
 import '../domain/playlist_info.dart';
 import '../domain/track.dart';
 import '../../player/application/player_controller.dart';
-import '../../player/application/video_playback_request.dart';
 import 'widgets/track_artwork.dart';
 
 enum TrackMenuSource { library, recent, ranking, playlist }
@@ -31,24 +30,8 @@ Future<void> playTrack(
   List<Track> queue, {
   String source = '本地曲库',
 }) async {
-  if (track.isVideoOnly) {
-    // Opening a standalone MV before its [Video] widget has attached on
-    // Windows lets audio start with no native frame sink. The shell consumes
-    // this request by mounting the player stage first. Select the queue now,
-    // rather than after the native video surface is ready, so a click from
-    // "最近播放" immediately replaces an older MV-only queue.
-    ref
-        .read(playerControllerProvider.notifier)
-        .selectQueue(track, queue, source: source);
-    ref
-        .read(videoPlaybackRequestProvider.notifier)
-        .state = VideoPlaybackRequest(
-      track: track,
-      queue: List<Track>.unmodifiable(queue),
-      source: source,
-    );
-    return;
-  }
+  // PlayerController owns the media-type route. That keeps a click from the
+  // library, queue drawer, or next/previous buttons on one safe MV hand-off.
   await ref
       .read(playerControllerProvider.notifier)
       .playTrack(track, queue, source: source);

@@ -32,7 +32,7 @@ class Track {
   final String mediaType;
 
   bool get hasVideo => videoPath != null && videoPath!.isNotEmpty;
-  bool get isVideoOnly => mediaType == 'video';
+  bool get isVideoOnly => mediaType.trim().toLowerCase() == 'video';
 
   Track copyWith({
     int? id,

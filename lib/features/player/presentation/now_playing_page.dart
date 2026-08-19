@@ -693,12 +693,12 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
           : PlayerVisualMode.vinyl;
       _mvSurfaceReady = false;
       if (_mode == PlayerVisualMode.musicVideo && track != null) {
-        // The Windows texture is created asynchronously. Keep [Video] mounted
-        // and wait for media_kit's actual first-frame signal instead of
-        // treating the next Flutter frame as proof that native output exists.
+        // Queue/next/previous can select a pure MV while this player is
+        // already open. Mount the native stage first, then reopen that source
+        // through the same hand-off used by an MV clicked from the library.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _visualTrackId == track.id) {
-            _waitForMvFirstFrame(track);
+            unawaited(_openMvSource(track));
           }
         });
       }
@@ -1276,7 +1276,12 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
       if (!_isCurrentMvSurfaceRequest(surfaceRequest, track)) return;
       await ref
           .read(playerControllerProvider.notifier)
-          .playTrack(track, request.queue, source: request.source);
+          .playTrack(
+            track,
+            request.queue,
+            source: request.source,
+            videoSurfaceReady: true,
+          );
       if (!_isCurrentMvSurfaceRequest(surfaceRequest, track)) return;
       if (ref.read(playerControllerProvider).currentTrack?.id != track.id) {
         _markMvSurfaceFailed(
@@ -1303,6 +1308,9 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
         .tracks
         .cast<Track?>()
         .firstWhere((item) => item?.id == track.id, orElse: () => track)!;
+    // A standalone MV has no audio/record source. Never let a generic mode
+    // toggle replace it with the misleading "no paired record" placeholder.
+    if (mode == PlayerVisualMode.vinyl && libraryTrack.isVideoOnly) return;
     if (mode == PlayerVisualMode.musicVideo &&
         (libraryTrack.hasVideo || libraryTrack.isVideoOnly)) {
       await _openMvSource(libraryTrack);
@@ -3051,16 +3059,17 @@ class _ModeSwitch extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _ModePill(
-          selected: mode == PlayerVisualMode.vinyl,
-          icon: Icons.album_rounded,
-          label: hasAudio ? '唱片' : '关联唱片',
-          onTap: () => onChanged(PlayerVisualMode.vinyl),
-        ),
+        if (hasAudio)
+          _ModePill(
+            selected: mode == PlayerVisualMode.vinyl,
+            icon: Icons.album_rounded,
+            label: '唱片',
+            onTap: () => onChanged(PlayerVisualMode.vinyl),
+          ),
         _ModePill(
           selected: mode == PlayerVisualMode.musicVideo,
           icon: Icons.ondemand_video_rounded,
-          label: hasVideo ? 'MV · 已配对' : '关联 MV',
+          label: hasAudio ? (hasVideo ? 'MV · 已配对' : '关联 MV') : 'MV',
           onTap: () => onChanged(PlayerVisualMode.musicVideo),
         ),
       ],
