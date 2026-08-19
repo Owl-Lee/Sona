@@ -727,7 +727,19 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       decoration: InputDecoration(
         isDense: true,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.34),
+        fillColor: Colors.white.withValues(alpha: 0.30),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 13,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.52)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: widget.glassTint, width: 1.25),
+        ),
         hintText: '搜索歌名、歌手或专辑',
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: _searchController.text.isEmpty
@@ -748,7 +760,19 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       decoration: InputDecoration(
         isDense: true,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.34),
+        fillColor: Colors.white.withValues(alpha: 0.30),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 13,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.52)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: widget.glassTint, width: 1.25),
+        ),
         prefixIcon: const Icon(Icons.sort_rounded),
       ),
       items: const [
@@ -774,65 +798,84 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
               icon: Icons.library_music_outlined,
               label: '云端曲目',
               value: '${allTracks.length} 首',
+              tint: widget.glassTint,
             ),
             _CloudLibraryMetric(
               icon: Icons.music_note_rounded,
               label: '音乐',
               value: '$audioCount 首',
+              tint: widget.glassTint,
             ),
             _CloudLibraryMetric(
               icon: Icons.movie_outlined,
               label: 'MV',
               value: '$videoCount 首',
+              tint: widget.glassTint,
             ),
             _CloudLibraryMetric(
               icon: Icons.cloud_outlined,
               label: '已用空间',
               value: _formatBytes(totalBytes),
+              tint: widget.glassTint,
             ),
           ],
         ),
         const SizedBox(height: 14),
-        SegmentedButton<_CloudLibraryView>(
-          showSelectedIcon: false,
-          selected: {_view},
-          onSelectionChanged: (selection) =>
-              setState(() => _view = selection.first),
-          segments: const [
-            ButtonSegment(
-              value: _CloudLibraryView.tracks,
-              icon: Icon(Icons.queue_music_rounded),
-              label: Text('曲目'),
-            ),
-            ButtonSegment(
-              value: _CloudLibraryView.artists,
-              icon: Icon(Icons.person_outline_rounded),
-              label: Text('按歌手'),
-            ),
-          ],
+        SizedBox(
+          width: 230,
+          child: Row(
+            children: [
+              Expanded(
+                child: _CloudJellyChoice(
+                  selected: _view == _CloudLibraryView.tracks,
+                  icon: Icons.queue_music_rounded,
+                  label: '曲目',
+                  tint: widget.glassTint,
+                  onTap: () => setState(() => _view = _CloudLibraryView.tracks),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _CloudJellyChoice(
+                  selected: _view == _CloudLibraryView.artists,
+                  icon: Icons.person_outline_rounded,
+                  label: '按歌手',
+                  tint: widget.glassTint,
+                  onTap: () =>
+                      setState(() => _view = _CloudLibraryView.artists),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilterChip(
+            _CloudJellyChoice(
               selected: _filter == _CloudMediaFilter.all,
-              label: Text('全部 ${allTracks.length}'),
-              onSelected: (_) =>
-                  setState(() => _filter = _CloudMediaFilter.all),
+              icon: Icons.library_music_outlined,
+              label: '全部 ${allTracks.length}',
+              tint: widget.glassTint,
+              compact: true,
+              onTap: () => setState(() => _filter = _CloudMediaFilter.all),
             ),
-            FilterChip(
+            _CloudJellyChoice(
               selected: _filter == _CloudMediaFilter.audio,
-              label: Text('音乐 $audioCount'),
-              onSelected: (_) =>
-                  setState(() => _filter = _CloudMediaFilter.audio),
+              icon: Icons.music_note_rounded,
+              label: '音乐 $audioCount',
+              tint: widget.glassTint,
+              compact: true,
+              onTap: () => setState(() => _filter = _CloudMediaFilter.audio),
             ),
-            FilterChip(
+            _CloudJellyChoice(
               selected: _filter == _CloudMediaFilter.video,
-              label: Text('MV $videoCount'),
-              onSelected: (_) =>
-                  setState(() => _filter = _CloudMediaFilter.video),
+              icon: Icons.movie_outlined,
+              label: 'MV $videoCount',
+              tint: widget.glassTint,
+              compact: true,
+              onTap: () => setState(() => _filter = _CloudMediaFilter.video),
             ),
           ],
         ),
@@ -966,26 +1009,50 @@ class _CloudLibraryMetric extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.tint,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Color tint;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(minWidth: 112),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.46),
+            tint.withValues(alpha: 0.14),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.58)),
+        boxShadow: [
+          BoxShadow(
+            color: tint.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: AppColors.accent),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: tint.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: AppColors.accent),
+          ),
           const SizedBox(width: 7),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1002,6 +1069,98 @@ class _CloudLibraryMetric extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Shared glass interaction for cloud-library switches and filters. The
+/// animated surface is deliberately restrained: it reads as a soft jelly press
+/// on selection without making a dense library panel feel like a game UI.
+class _CloudJellyChoice extends StatelessWidget {
+  const _CloudJellyChoice({
+    required this.selected,
+    required this.icon,
+    required this.label,
+    required this.tint,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final bool selected;
+  final IconData icon;
+  final String label;
+  final Color tint;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? AppColors.ink : AppColors.textSecondary;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(compact ? 15 : 16),
+        gradient: selected
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.alphaBlend(tint.withValues(alpha: 0.48), Colors.white),
+                  Color.alphaBlend(tint.withValues(alpha: 0.28), Colors.white),
+                ],
+              )
+            : LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.24),
+                  Colors.white.withValues(alpha: 0.13),
+                ],
+              ),
+        border: Border.all(
+          color: selected
+              ? tint.withValues(alpha: 0.56)
+              : Colors.white.withValues(alpha: 0.46),
+          width: selected ? 1.15 : 0.9,
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: tint.withValues(alpha: 0.14),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(compact ? 15 : 16),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 11 : 10,
+              vertical: compact ? 8 : 10,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: compact ? 16 : 17, color: foreground),
+                SizedBox(width: compact ? 6 : 7),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: compact ? 13 : 14,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
