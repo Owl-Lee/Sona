@@ -377,53 +377,210 @@ class _SettingsPanel extends ConsumerWidget {
   }
 }
 
-class _StoragePanel extends StatelessWidget {
+class _StoragePanel extends ConsumerStatefulWidget {
   const _StoragePanel({required this.databasePath});
 
   final String databasePath;
 
   @override
+  ConsumerState<_StoragePanel> createState() => _StoragePanelState();
+}
+
+class _StoragePanelState extends ConsumerState<_StoragePanel> {
+  String _acoustIdKey = '';
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(_loadRecognitionSettings);
+  }
+
+  Future<void> _loadRecognitionSettings() async {
+    final key = await ref
+        .read(libraryControllerProvider.notifier)
+        .getAcoustIdClientKey();
+    if (mounted) setState(() => _acoustIdKey = key);
+  }
+
+  Future<void> _configureRecognition() async {
+    final controller = TextEditingController(text: _acoustIdKey);
+    final key = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('配置免费音频声纹'),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '在 acoustid.org 注册一个非商业应用即可免费获得 Application API Key。'
+                '这里只保存应用 Key，不需要账户密码。',
+              ),
+              const SizedBox(height: 8),
+              const SelectableText(
+                'https://acoustid.org/new-application',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'AcoustID Application API Key',
+                  hintText: '例如：xxxxxxxxxxx',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (value) => Navigator.pop(dialogContext, value),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          if (_acoustIdKey.isNotEmpty)
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, ''),
+              child: const Text('清除 Key'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (key == null) return;
+    final normalized = key.trim();
+    if (normalized.isNotEmpty &&
+        !RegExp(r'^[A-Za-z0-9_-]{6,80}$').hasMatch(normalized)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('这个 Application API Key 格式不正确。')),
+      );
+      return;
+    }
+    await ref
+        .read(libraryControllerProvider.notifier)
+        .setAcoustIdClientKey(normalized);
+    if (!mounted) return;
+    setState(() => _acoustIdKey = normalized);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(normalized.isEmpty ? '已关闭声纹联网查询' : '音频声纹已启用')),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return _SettingsPanel(
       padding: const EdgeInsets.all(18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.lavender.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(Icons.storage_rounded, color: AppColors.lavender),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '此设备数据库',
-                  style: TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.lavender.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(height: 7),
-                SelectableText(
-                  databasePath.isEmpty ? '正在读取数据库位置…' : databasePath,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    height: 1.45,
-                  ),
+                child: const Icon(
+                  Icons.storage_rounded,
+                  color: AppColors.lavender,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '此设备数据库',
+                      style: TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    SelectableText(
+                      widget.databasePath.isEmpty
+                          ? '正在读取数据库位置…'
+                          : widget.databasePath,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              const _Badge('SQLite'),
+            ],
           ),
-          const SizedBox(width: 10),
-          const _Badge('SQLite'),
+          const Divider(height: 34),
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  Icons.fingerprint_rounded,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '音频声纹识别',
+                      style: TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _acoustIdKey.isEmpty
+                          ? '未配置时仍可使用标签、文件名和 MusicBrainz 后备校准'
+                          : 'AcoustID 已配置 · 声纹不命中时自动回退公开曲库',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: _configureRecognition,
+                icon: Icon(
+                  _acoustIdKey.isEmpty
+                      ? Icons.add_link_rounded
+                      : Icons.check_circle_rounded,
+                  size: 18,
+                ),
+                label: Text(_acoustIdKey.isEmpty ? '配置免费 Key' : '已启用'),
+              ),
+            ],
+          ),
         ],
       ),
     );
