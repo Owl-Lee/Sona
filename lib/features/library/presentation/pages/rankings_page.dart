@@ -166,83 +166,101 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                               ],
                             ),
                           ),
-                          const Divider(height: 1),
+                          const SizedBox(height: 4),
                           Expanded(
                             child: WholeItemViewport(
-                              itemExtent: 65,
-                              child: ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(0, 5, 0, 22),
+                              itemExtent: 70,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(8, 3, 8, 22),
                                 physics: const ItemSnapScrollPhysics(
-                                  itemExtent: 65,
+                                  itemExtent: 70,
                                   parent: ClampingScrollPhysics(),
                                 ),
                                 itemCount: tracks.length,
-                                separatorBuilder: (_, _) => Divider(
-                                  height: 1,
-                                  color: AppColors.ink.withValues(alpha: 0.20),
-                                ),
                                 itemBuilder: (context, index) {
                                   final track = tracks[index];
-                                  return SizedBox(
-                                    height: 64,
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.translucent,
-                                      onSecondaryTapDown: (details) =>
-                                          showTrackContextMenu(
-                                            context,
-                                            ref,
-                                            track,
-                                            source: TrackMenuSource.ranking,
-                                            position: details.globalPosition,
+                                  final selected = current?.id == track.id;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Material(
+                                      color: selected
+                                          ? appearance.accent.withValues(
+                                              alpha: 0.16,
+                                            )
+                                          : Colors.white.withValues(
+                                              alpha: 0.14,
+                                            ),
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.translucent,
+                                        onSecondaryTapDown: (details) =>
+                                            showTrackContextMenu(
+                                              context,
+                                              ref,
+                                              track,
+                                              source: TrackMenuSource.ranking,
+                                              position: details.globalPosition,
+                                            ),
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                              ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              15,
+                                            ),
                                           ),
-                                      child: ListTile(
-                                        selected: current?.id == track.id,
-                                        leading: SizedBox(
-                                          width: 78,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(
-                                                width: 25,
-                                                child: Text(
-                                                  '${index + 1}',
-                                                  style: const TextStyle(
-                                                    fontSize: 17,
-                                                    fontWeight: FontWeight.w800,
+                                          selected: selected,
+                                          leading: SizedBox(
+                                            width: 78,
+                                            child: Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 25,
+                                                  child: Text(
+                                                    '${index + 1}',
+                                                    style: const TextStyle(
+                                                      fontSize: 17,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              TrackArtwork(
-                                                track: track,
-                                                size: 46,
-                                                borderRadius: 11,
-                                              ),
-                                            ],
+                                                TrackArtwork(
+                                                  track: track,
+                                                  size: 46,
+                                                  borderRadius: 11,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                        title: Text(
-                                          track.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        subtitle: Text(track.artist),
-                                        trailing: SizedBox(
-                                          width: 88,
-                                          child: _RankingCountBadge(
-                                            count: counts[track.id] ?? 0,
-                                            accent: appearance.accent,
+                                          title: Text(
+                                            track.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        ),
-                                        onLongPress: () => showTrackContextMenu(
-                                          context,
-                                          ref,
-                                          track,
-                                          source: TrackMenuSource.ranking,
-                                        ),
-                                        onTap: () => playTrack(
-                                          ref,
-                                          track,
-                                          tracks,
-                                          source: '听歌排行',
+                                          subtitle: Text(track.artist),
+                                          trailing: SizedBox(
+                                            width: 88,
+                                            child: _RankingCountBadge(
+                                              count: counts[track.id] ?? 0,
+                                              accent: appearance.accent,
+                                            ),
+                                          ),
+                                          onLongPress: () =>
+                                              showTrackContextMenu(
+                                                context,
+                                                ref,
+                                                track,
+                                                source: TrackMenuSource.ranking,
+                                              ),
+                                          onTap: () => playTrack(
+                                            ref,
+                                            track,
+                                            tracks,
+                                            source: '听歌排行',
+                                          ),
                                         ),
                                       ),
                                     ),
