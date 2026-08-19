@@ -166,36 +166,59 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Expanded(
                             child: WholeItemViewport(
-                              itemExtent: 70,
+                              // Keep the rhythm compact enough that the
+                              // available desktop height is used for complete
+                              // rows, never a severed final card.
+                              itemExtent: 62,
                               child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(8, 3, 8, 22),
+                                padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                                 physics: const ItemSnapScrollPhysics(
-                                  itemExtent: 70,
+                                  itemExtent: 62,
                                   parent: ClampingScrollPhysics(),
                                 ),
+                                itemExtent: 62,
                                 itemCount: tracks.length,
                                 itemBuilder: (context, index) {
                                   final track = tracks[index];
                                   final selected = current?.id == track.id;
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 7),
-                                    child: LiquidGlass(
-                                      borderRadius: 15,
-                                      blur: 0,
-                                      tint: appearance.accent,
-                                      borderWidth: selected ? 1.45 : 1.18,
-                                      child: Material(
+                                    padding: const EdgeInsets.only(bottom: 5),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
                                         color: selected
                                             ? appearance.accent.withValues(
-                                                alpha: 0.14,
+                                                alpha: 0.15,
                                               )
                                             : Colors.white.withValues(
-                                                alpha: 0.10,
+                                                alpha: 0.16,
                                               ),
-                                        borderRadius: BorderRadius.circular(15),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: selected
+                                              ? appearance.accent.withValues(
+                                                  alpha: 0.48,
+                                                )
+                                              : Colors.white.withValues(
+                                                  alpha: 0.32,
+                                                ),
+                                          width: selected ? 1.15 : 0.8,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(14),
                                         child: GestureDetector(
                                           behavior: HitTestBehavior.translucent,
                                           onSecondaryTapDown: (details) =>
@@ -208,6 +231,8 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                                                     details.globalPosition,
                                               ),
                                           child: ListTile(
+                                            dense: true,
+                                            minVerticalPadding: 2,
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
                                                   horizontal: 10,
@@ -218,15 +243,15 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                                             ),
                                             selected: selected,
                                             leading: SizedBox(
-                                              width: 78,
+                                              width: 74,
                                               child: Row(
                                                 children: [
                                                   SizedBox(
-                                                    width: 25,
+                                                    width: 23,
                                                     child: Text(
                                                       '${index + 1}',
                                                       style: const TextStyle(
-                                                        fontSize: 17,
+                                                        fontSize: 16,
                                                         fontWeight:
                                                             FontWeight.w800,
                                                       ),
@@ -234,8 +259,8 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                                                   ),
                                                   TrackArtwork(
                                                     track: track,
-                                                    size: 46,
-                                                    borderRadius: 11,
+                                                    size: 42,
+                                                    borderRadius: 12,
                                                   ),
                                                 ],
                                               ),
