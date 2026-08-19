@@ -1141,6 +1141,7 @@ class _CloudTrackRow extends StatelessWidget {
                     overlay.context.findRenderObject() as RenderBox;
                 final action = await showMenu<String>(
                   context: context,
+                  constraints: const BoxConstraints.tightFor(width: 142),
                   position: RelativeRect.fromRect(
                     Rect.fromLTWH(
                       details.globalPosition.dx,
@@ -1151,12 +1152,16 @@ class _CloudTrackRow extends StatelessWidget {
                     Offset.zero & overlayBox.size,
                   ),
                   items: const [
-                    PopupMenuItem(
+                    PopupMenuItem<String>(
                       value: 'delete',
-                      child: ListTile(
-                        dense: true,
-                        leading: Icon(Icons.delete_outline_rounded),
-                        title: Text('从云端删除'),
+                      height: 42,
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, size: 19),
+                          SizedBox(width: 8),
+                          Text('从云端删除'),
+                        ],
                       ),
                     ),
                   ],
