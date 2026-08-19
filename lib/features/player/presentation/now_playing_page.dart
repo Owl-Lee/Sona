@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../library/application/library_controller.dart';
@@ -885,7 +886,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
               constraints: const BoxConstraints(maxWidth: 590),
               child: _GlassPanel(
                 limeJelly: false,
-                child: _PlayerInformation(
+                child: PlayerInformation(
                   track: track,
                   playback: playback,
                   mode: _mode,
@@ -1021,7 +1022,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
               child: _GlassPanel(
                 compact: true,
                 limeJelly: false,
-                child: _PlayerInformation(
+                child: PlayerInformation(
                   track: track,
                   playback: playback,
                   mode: _mode,
@@ -2193,7 +2194,7 @@ class _DesktopMvControlBar extends ConsumerWidget {
                         tooltip: '播放队列',
                         onPressed: track == null
                             ? null
-                            : () => _PlayerInformation.showQueue(context, ref),
+                            : () => PlayerInformation.showQueue(context, ref),
                         color: Colors.white.withValues(alpha: 0.88),
                         iconSize: 31,
                         visualDensity: VisualDensity.compact,
@@ -2230,8 +2231,9 @@ class _DesktopMvControlBar extends ConsumerWidget {
   }
 }
 
-class _PlayerInformation extends ConsumerWidget {
-  const _PlayerInformation({
+class PlayerInformation extends ConsumerWidget {
+  const PlayerInformation({
+    super.key,
     required this.track,
     required this.playback,
     required this.mode,
@@ -2365,7 +2367,7 @@ class _PlayerInformation extends ConsumerWidget {
             accent: accent,
             accentForeground: accentForeground,
             limeJelly: false,
-            onShowQueue: () => _PlayerInformation.showQueue(context, ref),
+            onShowQueue: () => PlayerInformation.showQueue(context, ref),
           ),
         if (!compact)
           Row(
@@ -2377,20 +2379,6 @@ class _PlayerInformation extends ConsumerWidget {
                 activeColor: accent,
                 compact: compact,
                 iconSize: compact ? 29 : 37,
-              ),
-              IconButton(
-                tooltip: '播放队列',
-                onPressed: track == null
-                    ? null
-                    : () => _PlayerInformation.showQueue(context, ref),
-                color: Colors.white.withValues(alpha: 0.88),
-                iconSize: compact ? 29 : 37,
-                visualDensity: VisualDensity.compact,
-                constraints: compact
-                    ? const BoxConstraints.tightFor(width: 34, height: 44)
-                    : null,
-                padding: compact ? EdgeInsets.zero : null,
-                icon: const Icon(Icons.queue_music_rounded),
               ),
               IconButton(
                 onPressed: track == null ? null : player.previous,
@@ -2422,6 +2410,20 @@ class _PlayerInformation extends ConsumerWidget {
                     : null,
                 padding: compact ? EdgeInsets.zero : null,
                 icon: const Icon(Icons.skip_next_rounded),
+              ),
+              IconButton(
+                tooltip: '播放队列',
+                onPressed: track == null
+                    ? null
+                    : () => PlayerInformation.showQueue(context, ref),
+                color: Colors.white.withValues(alpha: 0.88),
+                iconSize: compact ? 29 : 37,
+                visualDensity: VisualDensity.compact,
+                constraints: compact
+                    ? const BoxConstraints.tightFor(width: 34, height: 44)
+                    : null,
+                padding: compact ? EdgeInsets.zero : null,
+                icon: const Icon(Icons.queue_music_rounded),
               ),
               if (!compact)
                 _PlayerVolumeButton(
@@ -2459,6 +2461,188 @@ class _PlayerInformation extends ConsumerWidget {
     final controller = ref.read(playerControllerProvider.notifier);
     final tracks = controller.queue;
     final playback = ref.read(playerControllerProvider);
+    if (MediaQuery.sizeOf(context).width >= 760) {
+      final accent = ref.read(appearanceControllerProvider).accent;
+      await showGeneralDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '关闭播放队列',
+        barrierColor: Colors.black.withValues(alpha: 0.10),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (dialogContext, _, _) => Align(
+          alignment: Alignment.centerRight,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 18, 18, 126),
+              child: SizedBox(
+                width: 380,
+                child: LiquidGlass(
+                  borderRadius: 24,
+                  blur: 26,
+                  tint: accent,
+                  padding: const EdgeInsets.fromLTRB(14, 16, 10, 10),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.70,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 0, 4, 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        '播放队列',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        '${playback.queueSource} · ${tracks.length} 首',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: '关闭',
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.separated(
+                              padding: const EdgeInsets.only(right: 4),
+                              itemCount: tracks.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 5),
+                              itemBuilder: (context, index) {
+                                final item = tracks[index];
+                                final current =
+                                    item.id == playback.currentTrack?.id;
+                                return Material(
+                                  color: current
+                                      ? accent.withValues(alpha: 0.17)
+                                      : Colors.white.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(15),
+                                    onTap: () async {
+                                      await controller.playTrack(
+                                        item,
+                                        tracks,
+                                        source: playback.queueSource,
+                                      );
+                                      if (dialogContext.mounted) {
+                                        Navigator.pop(dialogContext);
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 8,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          TrackArtwork(
+                                            track: item,
+                                            size: 42,
+                                            borderRadius: 12,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  item.title,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontWeight: current
+                                                        ? FontWeight.w800
+                                                        : FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  item.artist,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          current
+                                              ? Icon(
+                                                  Icons.graphic_eq_rounded,
+                                                  color: accent,
+                                                )
+                                              : Text(
+                                                  formatDuration(item.duration),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                  ),
+                                                ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        transitionBuilder: (_, animation, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0.08, 0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: child,
+          ),
+        ),
+      );
+      return;
+    }
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
