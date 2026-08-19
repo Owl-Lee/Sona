@@ -181,85 +181,92 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                                   final track = tracks[index];
                                   final selected = current?.id == track.id;
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6),
-                                    child: Material(
-                                      color: selected
-                                          ? appearance.accent.withValues(
-                                              alpha: 0.16,
-                                            )
-                                          : Colors.white.withValues(
-                                              alpha: 0.14,
-                                            ),
-                                      borderRadius: BorderRadius.circular(15),
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.translucent,
-                                        onSecondaryTapDown: (details) =>
-                                            showTrackContextMenu(
-                                              context,
-                                              ref,
-                                              track,
-                                              source: TrackMenuSource.ranking,
-                                              position: details.globalPosition,
-                                            ),
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 10,
+                                    padding: const EdgeInsets.only(bottom: 7),
+                                    child: LiquidGlass(
+                                      borderRadius: 15,
+                                      blur: 0,
+                                      tint: appearance.accent,
+                                      borderWidth: selected ? 1.45 : 1.18,
+                                      child: Material(
+                                        color: selected
+                                            ? appearance.accent.withValues(
+                                                alpha: 0.14,
+                                              )
+                                            : Colors.white.withValues(
+                                                alpha: 0.10,
                                               ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              15,
-                                            ),
-                                          ),
-                                          selected: selected,
-                                          leading: SizedBox(
-                                            width: 78,
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 25,
-                                                  child: Text(
-                                                    '${index + 1}',
-                                                    style: const TextStyle(
-                                                      fontSize: 17,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                    ),
-                                                  ),
-                                                ),
-                                                TrackArtwork(
-                                                  track: track,
-                                                  size: 46,
-                                                  borderRadius: 11,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          title: Text(
-                                            track.title,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          subtitle: Text(track.artist),
-                                          trailing: SizedBox(
-                                            width: 88,
-                                            child: _RankingCountBadge(
-                                              count: counts[track.id] ?? 0,
-                                              accent: appearance.accent,
-                                            ),
-                                          ),
-                                          onLongPress: () =>
+                                        borderRadius: BorderRadius.circular(15),
+                                        child: GestureDetector(
+                                          behavior: HitTestBehavior.translucent,
+                                          onSecondaryTapDown: (details) =>
                                               showTrackContextMenu(
                                                 context,
                                                 ref,
                                                 track,
                                                 source: TrackMenuSource.ranking,
+                                                position:
+                                                    details.globalPosition,
                                               ),
-                                          onTap: () => playTrack(
-                                            ref,
-                                            track,
-                                            tracks,
-                                            source: '听歌排行',
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            selected: selected,
+                                            leading: SizedBox(
+                                              width: 78,
+                                              child: Row(
+                                                children: [
+                                                  SizedBox(
+                                                    width: 25,
+                                                    child: Text(
+                                                      '${index + 1}',
+                                                      style: const TextStyle(
+                                                        fontSize: 17,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  TrackArtwork(
+                                                    track: track,
+                                                    size: 46,
+                                                    borderRadius: 11,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            title: Text(
+                                              track.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            subtitle: Text(track.artist),
+                                            trailing: SizedBox(
+                                              width: 88,
+                                              child: _RankingCountBadge(
+                                                count: counts[track.id] ?? 0,
+                                                accent: appearance.accent,
+                                              ),
+                                            ),
+                                            onLongPress: () =>
+                                                showTrackContextMenu(
+                                                  context,
+                                                  ref,
+                                                  track,
+                                                  source:
+                                                      TrackMenuSource.ranking,
+                                                ),
+                                            onTap: () => playTrack(
+                                              ref,
+                                              track,
+                                              tracks,
+                                              source: '听歌排行',
+                                            ),
                                           ),
                                         ),
                                       ),
