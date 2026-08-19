@@ -118,14 +118,16 @@ Future<String?> _chooseTrackAction(
   Offset? position,
 }) {
   final items = _trackMenuItems(track, source);
-  if (position != null && MediaQuery.sizeOf(context).width >= 760) {
+  final overlay = Navigator.of(context).overlay;
+  if (position != null &&
+      overlay != null &&
+      MediaQuery.sizeOf(context).width >= 760) {
+    final overlayBox = overlay.context.findRenderObject() as RenderBox;
     return showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(
-        position.dx,
-        position.dy,
-        MediaQuery.sizeOf(context).width - position.dx,
-        MediaQuery.sizeOf(context).height - position.dy,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 1, 1),
+        Offset.zero & overlayBox.size,
       ),
       items: items
           .map(

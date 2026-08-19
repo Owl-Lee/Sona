@@ -727,7 +727,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       decoration: InputDecoration(
         isDense: true,
         filled: true,
-        fillColor: Colors.black.withValues(alpha: 0.10),
+        fillColor: Colors.white.withValues(alpha: 0.34),
         hintText: '搜索歌名、歌手或专辑',
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: _searchController.text.isEmpty
@@ -748,7 +748,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       decoration: InputDecoration(
         isDense: true,
         filled: true,
-        fillColor: Colors.black.withValues(alpha: 0.10),
+        fillColor: Colors.white.withValues(alpha: 0.34),
         prefixIcon: const Icon(Icons.sort_rounded),
       ),
       items: const [
@@ -941,7 +941,7 @@ class _CloudOfflineState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
       ),
@@ -978,7 +978,7 @@ class _CloudLibraryMetric extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 112),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
       ),
@@ -1026,7 +1026,7 @@ class _CloudArtistGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.055),
+        color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1126,7 +1126,7 @@ class _CloudTrackRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(left: 12, right: 6, top: 7, bottom: 7),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.06),
+        color: Colors.white.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(12),
       ),
       child: GestureDetector(
@@ -1135,13 +1135,20 @@ class _CloudTrackRow extends StatelessWidget {
         onSecondaryTapDown: opening || removing
             ? null
             : (details) async {
+                final overlay = Navigator.of(context).overlay;
+                if (overlay == null) return;
+                final overlayBox =
+                    overlay.context.findRenderObject() as RenderBox;
                 final action = await showMenu<String>(
                   context: context,
-                  position: RelativeRect.fromLTRB(
-                    details.globalPosition.dx,
-                    details.globalPosition.dy,
-                    0,
-                    0,
+                  position: RelativeRect.fromRect(
+                    Rect.fromLTWH(
+                      details.globalPosition.dx,
+                      details.globalPosition.dy,
+                      1,
+                      1,
+                    ),
+                    Offset.zero & overlayBox.size,
                   ),
                   items: const [
                     PopupMenuItem(
@@ -1242,11 +1249,10 @@ class _CloudPanel extends StatelessWidget {
       borderRadius: 18,
       blur: 22,
       tint: glassTint,
-      dark: true,
-      // Account settings sit over bright wallpapers. They need a tint, not
-      // the heavy black tail and shadow used by the immersive player.
-      darkOverlayAlpha: 0.055,
-      darkShadowAlpha: 0.10,
+      // Account settings live on bright wallpapers. Keep this a light glass
+      // surface so the content feels airy instead of turning the wallpaper
+      // into a grey/black veil.
+      dark: false,
       padding: const EdgeInsets.all(18),
       child: SizedBox(
         width: double.infinity,
@@ -1324,7 +1330,7 @@ class _CloudPanel extends StatelessWidget {
                 data: Theme.of(context).copyWith(
                   outlinedButtonTheme: OutlinedButtonThemeData(
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.black.withValues(alpha: 0.12),
+                      backgroundColor: Colors.white.withValues(alpha: 0.32),
                       side: BorderSide(
                         color: Colors.white.withValues(alpha: 0.46),
                       ),
