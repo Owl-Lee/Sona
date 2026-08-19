@@ -25,6 +25,293 @@ Future<void> importMusic(
   showLatestSnackBar(context, SnackBar(content: Text(summary.message)));
 }
 
+Future<void> smartOrganizeTracks(
+  BuildContext context,
+  WidgetRef ref,
+  Iterable<Track> tracks,
+) async {
+  final targets = tracks
+      .where((track) => track.id != null && needsSmartOrganization(track))
+      .toList(growable: false);
+  if (targets.isEmpty) {
+    showLatestSnackBar(
+      context,
+      const SnackBar(content: Text('没有发现需要整理的低可信度歌曲。')),
+    );
+    return;
+  }
+
+  final start = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.auto_awesome_rounded),
+          SizedBox(width: 10),
+          Text('一键智能整理'),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 470),
+        child: Text(
+          '发现 ${targets.length} 首信息不完整或可信度较低的歌曲。\n\n'
+          '将优先使用音频声纹加强识别（已配置时），'
+          '再使用免费公开曲库校准。结果会先给你预览，'
+          '确认后才会修改曲库。',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('暂不整理'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          icon: const Icon(Icons.search_rounded),
+          label: const Text('开始识别'),
+        ),
+      ],
+    ),
+  );
+  if (start != true || !context.mounted) return;
+
+  final suggestions = await showDialog<List<_SmartSuggestion>>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _SmartScanDialog(tracks: targets),
+  );
+  if (!context.mounted || suggestions == null) return;
+  if (suggestions.isEmpty) {
+    showLatestSnackBar(
+      context,
+      const SnackBar(content: Text('没有找到可靠的批量整理结果。')),
+    );
+    return;
+  }
+
+  final accepted = await showDialog<List<_SmartSuggestion>>(
+    context: context,
+    builder: (_) => _SmartReviewDialog(suggestions: suggestions),
+  );
+  if (!context.mounted || accepted == null || accepted.isEmpty) return;
+  final controller = ref.read(libraryControllerProvider.notifier);
+  var applied = 0;
+  for (final suggestion in accepted) {
+    final updated = await controller.applyIdentification(
+      suggestion.track,
+      suggestion.candidate,
+    );
+    if (updated != null) applied++;
+  }
+  if (!context.mounted) return;
+  showLatestSnackBar(
+    context,
+    SnackBar(content: Text('已完成 $applied 首歌曲的智能整理。')),
+  );
+}
+
+class _SmartSuggestion {
+  const _SmartSuggestion({required this.track, required this.candidate});
+
+  final Track track;
+  final TrackIdentificationCandidate candidate;
+}
+
+class _SmartScanDialog extends ConsumerStatefulWidget {
+  const _SmartScanDialog({required this.tracks});
+
+  final List<Track> tracks;
+
+  @override
+  ConsumerState<_SmartScanDialog> createState() => _SmartScanDialogState();
+}
+
+class _SmartScanDialogState extends ConsumerState<_SmartScanDialog> {
+  final List<_SmartSuggestion> _suggestions = [];
+  var _completed = 0;
+  var _stopping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(_scan);
+  }
+
+  Future<void> _scan() async {
+    final controller = ref.read(libraryControllerProvider.notifier);
+    for (final track in widget.tracks) {
+      if (_stopping) break;
+      TrackIdentificationResult result;
+      try {
+        result = await controller.identifyTrack(track);
+      } catch (_) {
+        result = const TrackIdentificationResult(message: '识别失败。');
+      }
+      final candidate = result.candidate;
+      if (candidate != null && _changesTrack(track, candidate)) {
+        _suggestions.add(
+          _SmartSuggestion(
+            track: track,
+            candidate: TrackIdentificationCandidate(
+              title: candidate.title,
+              artist: candidate.artist,
+              album: candidate.album.trim().isEmpty
+                  ? track.album
+                  : candidate.album,
+              confidence: candidate.confidence,
+              source: candidate.source,
+              explanation: candidate.explanation,
+            ),
+          ),
+        );
+      }
+      if (!mounted) return;
+      setState(() => _completed++);
+    }
+    if (!mounted) return;
+    Navigator.pop(context, List<_SmartSuggestion>.unmodifiable(_suggestions));
+  }
+
+  bool _changesTrack(Track track, TrackIdentificationCandidate candidate) =>
+      candidate.title.trim() != track.title.trim() ||
+      candidate.artist.trim() != track.artist.trim() ||
+      (candidate.album.trim().isNotEmpty &&
+          candidate.album.trim() != track.album.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.tracks.length;
+    final current = _completed >= total ? total : _completed + 1;
+    return AlertDialog(
+      title: const Text('正在智能整理'),
+      content: SizedBox(
+        width: 430,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(value: total == 0 ? 1 : _completed / total),
+            const SizedBox(height: 16),
+            Text(_stopping ? '正在停止，请稍候…' : '正在识别第 $current / $total 首'),
+            const SizedBox(height: 6),
+            Text(
+              _completed < total ? widget.tracks[_completed].title : '即将完成',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '已找到 ${_suggestions.length} 条可预览的建议',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _stopping ? null : () => setState(() => _stopping = true),
+          child: const Text('停止扫描'),
+        ),
+      ],
+    );
+  }
+}
+
+class _SmartReviewDialog extends StatefulWidget {
+  const _SmartReviewDialog({required this.suggestions});
+
+  final List<_SmartSuggestion> suggestions;
+
+  @override
+  State<_SmartReviewDialog> createState() => _SmartReviewDialogState();
+}
+
+class _SmartReviewDialogState extends State<_SmartReviewDialog> {
+  late final Set<int> _selected = {
+    for (var index = 0; index < widget.suggestions.length; index++)
+      if (widget.suggestions[index].candidate.confidence >= 0.68) index,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('整理预览 · 已选 ${_selected.length} 首'),
+      content: SizedBox(
+        width: 680,
+        height: 480,
+        child: ListView.separated(
+          itemCount: widget.suggestions.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final suggestion = widget.suggestions[index];
+            final candidate = suggestion.candidate;
+            return CheckboxListTile(
+              value: _selected.contains(index),
+              secondary: TrackArtwork(
+                track: suggestion.track,
+                size: 46,
+                borderRadius: 12,
+              ),
+              title: Text(
+                '${candidate.title}  ·  ${candidate.artist}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '原：${suggestion.track.title}  ·  ${suggestion.track.artist}\n'
+                '${candidate.source} · 可信度 ${(candidate.confidence * 100).round()}%',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              isThreeLine: true,
+              onChanged: (_) => setState(() {
+                _selected.contains(index)
+                    ? _selected.remove(index)
+                    : _selected.add(index);
+              }),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        TextButton(
+          onPressed: () => setState(() {
+            if (_selected.length == widget.suggestions.length) {
+              _selected.clear();
+            } else {
+              _selected.addAll(
+                List<int>.generate(widget.suggestions.length, (index) => index),
+              );
+            }
+          }),
+          child: Text(
+            _selected.length == widget.suggestions.length ? '全不选' : '全选',
+          ),
+        ),
+        FilledButton.icon(
+          onPressed: _selected.isEmpty
+              ? null
+              : () => Navigator.pop(context, [
+                  for (
+                    var index = 0;
+                    index < widget.suggestions.length;
+                    index++
+                  )
+                    if (_selected.contains(index)) widget.suggestions[index],
+                ]),
+          icon: const Icon(Icons.check_rounded),
+          label: Text('应用 ${_selected.length} 项'),
+        ),
+      ],
+    );
+  }
+}
+
 Future<void> playTrack(
   WidgetRef ref,
   Track track,

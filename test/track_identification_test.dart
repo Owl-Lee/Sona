@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sonar_vault/features/library/domain/track.dart';
 import 'package:sonar_vault/features/library/domain/track_identification.dart';
 
 void main() {
@@ -39,6 +40,45 @@ void main() {
           '【4K60FPS】演唱会 [BV1abcDEF123]',
           fileName: 'download',
         ),
+        isFalse,
+      );
+    });
+  });
+
+  group('needsSmartOrganization', () {
+    Track track({
+      required String title,
+      required String artist,
+      String album = '',
+      String path = r'E:\Music\song.mp3',
+    }) => Track(
+      id: 1,
+      path: path,
+      title: title,
+      artist: artist,
+      album: album,
+      duration: const Duration(minutes: 4),
+      fileSize: 1024,
+      contentHash: 'hash',
+      importedAt: DateTime(2026),
+    );
+
+    test('selects raw or unknown metadata for batch organization', () {
+      expect(
+        needsSmartOrganization(
+          track(title: '01 - 演唱会 [BV11M411n7TC]', artist: '未知歌手'),
+        ),
+        isTrue,
+      );
+      expect(
+        needsSmartOrganization(track(title: 'IMG_5921', artist: '本地视频')),
+        isTrue,
+      );
+    });
+
+    test('does not scan a recognizable single just because album is empty', () {
+      expect(
+        needsSmartOrganization(track(title: '像我这样的人', artist: '毛不易')),
         isFalse,
       );
     });

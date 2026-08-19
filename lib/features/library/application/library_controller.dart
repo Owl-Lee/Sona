@@ -78,13 +78,18 @@ class ImportSummary {
     required this.added,
     required this.skipped,
     required this.failed,
+    this.needsReview = 0,
   });
 
   final int added;
   final int skipped;
   final int failed;
+  final int needsReview;
 
-  String get message => '导入 $added 首，跳过 $skipped 首，失败 $failed 首';
+  String get message {
+    final base = '导入 $added 首，跳过 $skipped 首，失败 $failed 首';
+    return needsReview == 0 ? base : '$base · $needsReview 首可智能整理';
+  }
 }
 
 class LibraryController extends StateNotifier<LibraryState> {
@@ -201,7 +206,20 @@ class LibraryController extends StateNotifier<LibraryState> {
       importingFile: '',
     );
     await load();
-    return ImportSummary(added: added, skipped: skipped, failed: failed);
+    final importedPaths = paths.toSet();
+    final needsReview = state.tracks
+        .where(
+          (track) =>
+              importedPaths.contains(track.path) &&
+              needsSmartOrganization(track),
+        )
+        .length;
+    return ImportSummary(
+      added: added,
+      skipped: skipped,
+      failed: failed,
+      needsReview: needsReview,
+    );
   }
 
   Future<void> toggleFavorite(Track track) async {

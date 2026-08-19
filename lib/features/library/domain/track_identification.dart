@@ -1,3 +1,5 @@
+import 'track.dart';
+
 class ParsedTrackName {
   const ParsedTrackName({
     required this.title,
@@ -167,4 +169,28 @@ class TrackIdentificationResult {
   final bool fingerprintAttempted;
 
   bool get found => candidate != null;
+}
+
+/// Whether a track still resembles raw download metadata and should be
+/// offered to the optional online/fingerprint organizer.
+///
+/// An empty album is intentionally not enough: many correctly tagged singles
+/// have no album field, and batch organization should leave them alone.
+bool needsSmartOrganization(Track track) {
+  final title = track.title.trim();
+  final artist = track.artist.trim().toLowerCase();
+  final fileName = track.path.split(RegExp(r'[/\\]')).last;
+  final unknownArtist =
+      artist.isEmpty ||
+      artist == 'unknown artist' ||
+      artist == '未知歌手' ||
+      artist == '本地视频';
+  final suspiciousTitle =
+      title.isEmpty ||
+      title.length > 72 ||
+      RegExp(r'BV[0-9A-Za-z]{8,}', caseSensitive: false).hasMatch(title) ||
+      RegExp(r'^(img|dsc|mv)[_-]?\d+$', caseSensitive: false).hasMatch(title) ||
+      RegExp(r'^\d{1,3}\s*[-_.、]').hasMatch(title) ||
+      !TrackNameParser.isReliableTitle(title, fileName: fileName);
+  return unknownArtist || suspiciousTitle;
 }

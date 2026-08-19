@@ -125,6 +125,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                           importMusic(context, ref, directory: false),
                       onImportFolder: () =>
                           importMusic(context, ref, directory: true),
+                      onSmartOrganize: state.tracks.isEmpty
+                          ? null
+                          : () =>
+                                smartOrganizeTracks(context, ref, state.tracks),
                       onBatch: tracks.isEmpty
                           ? null
                           : () => _setSelecting(!_selecting),
@@ -492,6 +496,7 @@ class _Header extends StatelessWidget {
     required this.lightForeground,
     required this.onImportFile,
     required this.onImportFolder,
+    required this.onSmartOrganize,
     required this.onBatch,
   });
 
@@ -502,6 +507,7 @@ class _Header extends StatelessWidget {
   final bool lightForeground;
   final VoidCallback onImportFile;
   final VoidCallback onImportFolder;
+  final VoidCallback? onSmartOrganize;
   final VoidCallback? onBatch;
 
   @override
@@ -538,6 +544,11 @@ class _Header extends StatelessWidget {
       spacing: 9,
       children: [
         OutlinedButton.icon(
+          onPressed: state.isImporting ? null : onSmartOrganize,
+          icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+          label: const Text('智能整理'),
+        ),
+        OutlinedButton.icon(
           onPressed: onBatch,
           icon: const Icon(Icons.library_add_check_rounded, size: 18),
           label: const Text('批量管理'),
@@ -566,6 +577,18 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: title),
+        IconButton.filledTonal(
+          tooltip: '一键智能整理',
+          onPressed: state.isImporting ? null : onSmartOrganize,
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white.withValues(alpha: 0.78),
+            foregroundColor: AppColors.ink,
+            side: const BorderSide(color: Color(0x5C31465A)),
+            elevation: 1,
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded),
+        ),
+        const SizedBox(width: 8),
         IconButton.filledTonal(
           tooltip: '批量管理',
           onPressed: onBatch,
