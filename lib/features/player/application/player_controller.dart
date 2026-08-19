@@ -187,18 +187,27 @@ class PlayerController extends StateNotifier<PlaybackState> {
 
   List<Track> get queue => List.unmodifiable(_queue);
 
+  /// Makes a list the active playback context before a deferred media open.
+  ///
+  /// Video-only tracks mount a native surface before their file can be opened.
+  /// Updating the queue here keeps the mini player and queue sheet in sync
+  /// with the list the user just clicked, instead of briefly exposing the
+  /// previous MV queue while that surface is being prepared.
+  void selectQueue(Track track, List<Track> queue, {String source = '本地曲库'}) {
+    // Cancel an earlier deferred open. The following playTrack call creates
+    // its own request after the video surface is ready.
+    ++_sourceRequest;
+    _replaceQueue(track, queue);
+    state = state.copyWith(queueSource: source, errorMessage: '');
+  }
+
   Future<void> playTrack(
     Track track,
     List<Track> queue, {
     String source = '本地曲库',
   }) async {
     final request = ++_sourceRequest;
-    _queue = queue.isEmpty ? [track] : List<Track>.from(queue);
-    var index = _queue.indexWhere((item) => item.id == track.id);
-    if (index < 0) {
-      _queue.insert(0, track);
-      index = 0;
-    }
+    _replaceQueue(track, queue);
     state = state.copyWith(
       currentTrack: track,
       position: Duration.zero,
@@ -373,6 +382,13 @@ class PlayerController extends StateNotifier<PlaybackState> {
       _queue = [track];
     } else {
       _queue[index] = track;
+    }
+  }
+
+  void _replaceQueue(Track track, List<Track> queue) {
+    _queue = queue.isEmpty ? [track] : List<Track>.from(queue);
+    if (_queue.every((item) => item.id != track.id)) {
+      _queue.insert(0, track);
     }
   }
 
