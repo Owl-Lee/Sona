@@ -77,6 +77,39 @@ void main() {
       [first.id, second.id],
     );
   });
+
+  test(
+    'rapid bulk playlist and favorite operations remain internally consistent',
+    () async {
+      final tracks = <Track>[];
+      for (var index = 0; index < 40; index++) {
+        final inserted = await database.insertTrack(_track(100 + index));
+        expect(inserted, isNotNull);
+        tracks.add(inserted!);
+      }
+      final playlistId = await database.createPlaylist('高频操作回归');
+      final ids = tracks.map((track) => track.id!).toList(growable: false);
+
+      for (var round = 0; round < 30; round++) {
+        final rotating = [
+          ...ids.skip(round % ids.length),
+          ...ids.take(round % ids.length),
+          ids.first,
+        ];
+        await database.replacePlaylistTracks(playlistId, rotating);
+        await database.setFavorites(ids, value: round.isEven);
+      }
+
+      expect(
+        (await database.getTracksForPlaylist(playlistId)).length,
+        ids.length,
+      );
+      expect(
+        (await database.getTracks()).every((track) => track.isFavorite),
+        isFalse,
+      );
+    },
+  );
 }
 
 Track _track(int seed) {

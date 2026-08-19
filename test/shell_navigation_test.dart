@@ -12,4 +12,16 @@ void main() {
     }
     expect(canExitMobileShell(destination: 1, selectionActive: true), isFalse);
   });
+
+  test('high-frequency mobile navigation never allows an accidental exit', () {
+    for (var destination = 0; destination < 5; destination++) {
+      for (final selectionActive in [false, true]) {
+        final allowed = canExitMobileShell(
+          destination: destination,
+          selectionActive: selectionActive,
+        );
+        expect(allowed, destination == 0 && !selectionActive);
+      }
+    }
+  });
 }

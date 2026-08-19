@@ -930,62 +930,72 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                   onTap: () => onSelected(3),
                 ),
                 const SizedBox(height: 12),
-                Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(15),
-                  child: InkWell(
-                    onTap: onAccount,
+                LiquidGlass(
+                  borderRadius: 15,
+                  blur: 16,
+                  tint: appearance.accent,
+                  // The account card intentionally has a brighter rim and a
+                  // little more depth than the sidebar behind it, so it reads
+                  // as a tappable identity card instead of a white sticker.
+                  borderWidth: 1.25,
+                  child: Material(
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(15),
-                    child: Container(
-                      padding: const EdgeInsets.all(13),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: AppColors.outline),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 17,
-                            backgroundColor: AppColors.accent,
-                            backgroundImage:
-                                signedIn && account.avatarUrl != null
-                                ? NetworkImage(account.avatarUrl!)
-                                : null,
-                            child: signedIn && account.avatarUrl != null
-                                ? null
-                                : const Icon(
-                                    Icons.person_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  signedIn ? accountName : '本地模式',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                if (!signedIn)
-                                  const Text(
-                                    '前往设置连接云账号',
+                    child: InkWell(
+                      onTap: onAccount,
+                      borderRadius: BorderRadius.circular(15),
+                      child: Padding(
+                        padding: const EdgeInsets.all(13),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 17,
+                              backgroundColor: appearance.accent,
+                              backgroundImage:
+                                  signedIn && account.avatarUrl != null
+                                  ? NetworkImage(account.avatarUrl!)
+                                  : null,
+                              child: signedIn && account.avatarUrl != null
+                                  ? null
+                                  : const Icon(
+                                      Icons.person_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    signedIn ? accountName : '本地模式',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
+                                      color: useLightForeground
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                              ],
+                                  if (!signedIn)
+                                    Text(
+                                      '前往设置连接云账号',
+                                      style: TextStyle(
+                                        color: useLightForeground
+                                            ? Colors.white.withValues(
+                                                alpha: 0.76,
+                                              )
+                                            : AppColors.textSecondary,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
