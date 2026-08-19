@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../application/library_controller.dart';
 import '../domain/playlist_info.dart';
 import '../domain/track.dart';
+import '../domain/track_identification.dart';
 import '../../player/application/player_controller.dart';
 import 'widgets/track_artwork.dart';
 
@@ -57,6 +58,8 @@ Future<void> showTrackContextMenu(
 
   final library = ref.read(libraryControllerProvider.notifier);
   switch (action) {
+    case 'identify':
+      await _identifyTrack(context, ref, track);
     case 'favorite':
       await library.toggleFavorite(track);
     case 'playlist':
@@ -178,6 +181,7 @@ List<(String, IconData, String)> _trackMenuItems(
   Track track,
   TrackMenuSource source,
 ) => [
+  ('identify', Icons.auto_fix_high_rounded, 'AI 识别歌曲信息'),
   (
     'favorite',
     track.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
@@ -192,6 +196,152 @@ List<(String, IconData, String)> _trackMenuItems(
     ('source', Icons.playlist_remove_rounded, '从歌单中移除'),
   ('library', Icons.remove_circle_outline_rounded, '从本地曲库移除'),
 ];
+
+Future<void> _identifyTrack(
+  BuildContext context,
+  WidgetRef ref,
+  Track track,
+) async {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const AlertDialog(
+      content: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox.square(
+            dimension: 24,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+          SizedBox(width: 16),
+          Flexible(child: Text('正在分析标签、文件名和公开曲库…')),
+        ],
+      ),
+    ),
+  );
+
+  TrackIdentificationResult result;
+  try {
+    result = await ref
+        .read(libraryControllerProvider.notifier)
+        .identifyTrack(track);
+  } catch (_) {
+    result = const TrackIdentificationResult(message: '识别过程中出现异常，原歌曲信息没有被修改。');
+  }
+  if (!context.mounted) return;
+  Navigator.of(context, rootNavigator: true).pop();
+
+  final candidate = result.candidate;
+  if (candidate == null) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(result.message)));
+    return;
+  }
+
+  final accepted = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.auto_fix_high_rounded),
+          SizedBox(width: 10),
+          Text('识别结果'),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(result.message),
+            const SizedBox(height: 16),
+            _MetadataComparisonRow(
+              label: '歌曲',
+              before: track.title,
+              after: candidate.title,
+            ),
+            _MetadataComparisonRow(
+              label: '歌手',
+              before: track.artist,
+              after: candidate.artist,
+            ),
+            _MetadataComparisonRow(
+              label: '专辑',
+              before: track.album,
+              after: candidate.album.isEmpty ? '未提供' : candidate.album,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${candidate.source} · 可信度 ${(candidate.confidence * 100).round()}%',
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              candidate.explanation,
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('保留原信息'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          icon: const Icon(Icons.check_rounded),
+          label: const Text('应用校准'),
+        ),
+      ],
+    ),
+  );
+  if (accepted != true || !context.mounted) return;
+  await ref
+      .read(libraryControllerProvider.notifier)
+      .applyIdentification(track, candidate);
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('已更新为“${candidate.title}”－${candidate.artist}')),
+  );
+}
+
+class _MetadataComparisonRow extends StatelessWidget {
+  const _MetadataComparisonRow({
+    required this.label,
+    required this.before,
+    required this.after,
+  });
+
+  final String label;
+  final String before;
+  final String after;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 42,
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          Expanded(
+            child: Text(
+              before == after ? after : '$before  →  $after',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 Future<void> _addTrackToPlaylist(
   BuildContext context,

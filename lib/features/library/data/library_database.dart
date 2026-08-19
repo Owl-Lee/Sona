@@ -520,6 +520,20 @@ class LibraryDatabase {
     );
   }
 
+  Future<void> updateTrackMetadata(
+    int trackId, {
+    required String title,
+    required String artist,
+    required String album,
+  }) async {
+    await _database.update(
+      'tracks',
+      {'title': title.trim(), 'artist': artist.trim(), 'album': album.trim()},
+      where: 'id = ?',
+      whereArgs: [trackId],
+    );
+  }
+
   Future<void> setTrackDuration(int trackId, Duration duration) async {
     await _database.update(
       'tracks',
