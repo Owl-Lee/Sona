@@ -12,6 +12,7 @@ Sona 不是在线曲库服务：它帮助你导入、整理和播放自己拥有
 - 黑胶播放页、迷你播放条、音量/随机/循环/播放队列控制。
 - Windows 桌面布局与 Android 窄屏适配；播放器皮肤、自定义背景、头像和歌单封面。
 - 云账号和同步基础设施；断网时仍以本地曲库为主，不依赖云端才能播放。
+- 歌曲信息智能校准：先清洗标签和文件名，再查询 MusicBrainz；Windows 可通过 Chromaprint/AcoustID 进行真正的音频声纹匹配。
 
 ## 技术架构
 
@@ -31,6 +32,14 @@ flutter pub get
 flutter analyze
 flutter run -d windows
 ```
+
+如需启用 AcoustID 声纹联网查询，请先免费注册 AcoustID 应用，然后在构建时传入应用 key：
+
+```powershell
+flutter build windows --release --dart-define=ACOUSTID_API_KEY=你的应用Key
+```
+
+未配置 key 时，“AI 识别歌曲信息”仍会使用本地标签、文件名清洗和免费的 MusicBrainz 公开曲库，不会自动覆盖用户资料；所有候选结果均需用户确认。Chromaprint `fpcalc` 及其 LGPL 2.1 许可证位于 `windows/third_party/chromaprint/`。
 
 Windows 开发环境需要开启开发者模式，以便 Flutter 插件创建符号链接。运行已构建的 Release 程序不需要 Flutter SDK。
 

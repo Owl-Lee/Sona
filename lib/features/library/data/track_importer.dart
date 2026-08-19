@@ -8,6 +8,7 @@ import 'package:media_kit/media_kit.dart' hide Track;
 import 'package:path/path.dart' as path_util;
 
 import '../domain/track.dart';
+import '../domain/track_identification.dart';
 
 const supportedAudioExtensions = <String>{
   'mp3',
@@ -111,18 +112,19 @@ Future<Track> _inspectTrack(String filePath) async {
 
   final digest = await sha256.bind(file.openRead()).first;
   final stat = await file.stat();
-  final fallbackTitle = path_util.basenameWithoutExtension(filePath);
-
-  String clean(String? value, String fallback) {
-    final normalized = value?.trim();
-    return normalized == null || normalized.isEmpty ? fallback : normalized;
-  }
+  final parsed = TrackNameParser.parse(
+    fileName: path_util.basename(filePath),
+    taggedTitle: metadata?.title,
+    taggedArtist: metadata?.artist,
+    taggedAlbum: metadata?.album,
+    isVideo: isVideo,
+  );
 
   return Track(
     path: filePath,
-    title: clean(metadata?.title, fallbackTitle),
-    artist: clean(metadata?.artist, isVideo ? '本地视频' : '未知歌手'),
-    album: clean(metadata?.album, isVideo ? '独立 MV' : '未知专辑'),
+    title: parsed.title,
+    artist: parsed.artist,
+    album: parsed.album,
     duration: metadata?.duration ?? Duration.zero,
     fileSize: stat.size,
     contentHash: digest.toString(),
