@@ -42,37 +42,55 @@ abstract final class AppTheme {
       dividerColor: AppColors.outline,
       splashColor: AppColors.accent.withValues(alpha: 0.07),
       highlightColor: AppColors.accent.withValues(alpha: 0.04),
-      fontFamilyFallback: const ['Microsoft YaHei', 'PingFang SC'],
+      // Segoe UI Variable is the Windows equivalent of Apple's clean system
+      // typography. YaHei UI supplies screen-hinted Simplified/Traditional
+      // Chinese glyphs; the remaining entries keep the same intent on macOS
+      // and Android instead of falling back to Flutter's unrelated defaults.
+      fontFamily: 'Segoe UI Variable',
+      fontFamilyFallback: const [
+        'Microsoft YaHei UI',
+        'Microsoft YaHei',
+        'PingFang SC',
+        'PingFang TC',
+        'Noto Sans CJK SC',
+        'Noto Sans CJK TC',
+      ],
       textTheme: const TextTheme(
         displaySmall: TextStyle(
           color: AppColors.ink,
           fontSize: 34,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -1,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.45,
         ),
         headlineMedium: TextStyle(
           color: AppColors.ink,
           fontSize: 28,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.25,
         ),
         titleLarge: TextStyle(
           color: AppColors.ink,
           fontSize: 20,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
         ),
         titleMedium: TextStyle(
           color: AppColors.ink,
           fontSize: 15,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
-        bodyLarge: TextStyle(color: AppColors.ink, fontSize: 15, height: 1.45),
+        bodyLarge: TextStyle(
+          color: AppColors.ink,
+          fontSize: 15,
+          height: 1.4,
+          fontWeight: FontWeight.w400,
+        ),
         bodyMedium: TextStyle(
           color: AppColors.textSecondary,
           fontSize: 14,
-          height: 1.4,
+          height: 1.36,
+          fontWeight: FontWeight.w400,
         ),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
