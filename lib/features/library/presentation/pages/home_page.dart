@@ -858,6 +858,7 @@ class _RankingPreview extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(appearanceControllerProvider).accent;
     final ranked = tracks.where((track) => track.playCount > 0).toList()
       ..sort((a, b) => b.playCount.compareTo(a.playCount));
     if (ranked.isEmpty) {
@@ -881,7 +882,7 @@ class _RankingPreview extends ConsumerWidget {
     // list remains one tap away through "查看全部".
     final items = ranked.take(desktop ? 6 : 1).toList(growable: false);
     return LiquidGlass(
-      tint: ref.watch(appearanceControllerProvider).accent,
+      tint: accent,
       borderRadius: 18,
       blur: 18,
       padding: EdgeInsets.zero,
@@ -892,85 +893,101 @@ class _RankingPreview extends ConsumerWidget {
             for (var index = 0; index < items.length; index++)
               Padding(
                 padding: EdgeInsets.fromLTRB(6, index == 0 ? 6 : 2, 6, 4),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.44),
-                        Colors.white.withValues(alpha: 0.20),
-                      ],
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.52),
-                    ),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onSecondaryTapDown: (details) => showTrackContextMenu(
+                    context,
+                    ref,
+                    items[index],
+                    source: TrackMenuSource.ranking,
+                    position: details.globalPosition,
                   ),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                    ),
-                    dense: true,
-                    leading: SizedBox(
-                      width: 68,
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 19,
-                            child: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                color: index == 0
-                                    ? AppColors.accent
-                                    : AppColors.textSecondary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          TrackArtwork(
-                            track: items[index],
-                            size: 46,
-                            borderRadius: 10,
-                          ),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.44),
+                          Colors.white.withValues(alpha: 0.20),
                         ],
                       ),
-                    ),
-                    title: Text(
-                      items[index].title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      items[index].artist,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 11,
-                        vertical: 7,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.52),
                       ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.accent.withValues(alpha: 0.24),
-                            Colors.white.withValues(alpha: 0.44),
+                    ),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      dense: true,
+                      leading: SizedBox(
+                        width: 68,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 19,
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: index == 0
+                                      ? accent
+                                      : AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            TrackArtwork(
+                              track: items[index],
+                              size: 46,
+                              borderRadius: 10,
+                            ),
                           ],
                         ),
-                        border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.36),
+                      ),
+                      title: Text(
+                        items[index].title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        items[index].artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [
+                              accent.withValues(alpha: 0.24),
+                              Colors.white.withValues(alpha: 0.44),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.42),
+                          ),
+                        ),
+                        child: Text(
+                          '${items[index].playCount} 次',
+                          style: TextStyle(
+                            color: Color.lerp(AppColors.ink, accent, 0.38),
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        '${items[index].playCount} 次',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      onLongPress: () => showTrackContextMenu(
+                        context,
+                        ref,
+                        items[index],
+                        source: TrackMenuSource.ranking,
                       ),
+                      onTap: () =>
+                          playTrack(ref, items[index], ranked, source: '听歌排行'),
                     ),
-                    onTap: () =>
-                        playTrack(ref, items[index], ranked, source: '听歌排行'),
                   ),
                 ),
               ),
