@@ -4,6 +4,12 @@
 
 Sona 不是在线曲库服务：它帮助你导入、整理和播放自己拥有的音乐与 MV，并以液态玻璃、黑胶播放页和可切换皮肤提供沉浸式桌面体验。
 
+[产品官网](https://owl-lee.github.io/Sona-Player/) · [下载最新版](https://github.com/Owl-Lee/Sona-Player/releases/latest) · [问题反馈](https://github.com/Owl-Lee/Sona-Player/issues)
+
+![Sona 沉浸式播放页](docs/site/assets/screenshots/player.png)
+
+> 当前发布的是 `0.4.50` 公开预览版。Windows 提供 64 位便携包，Android 提供 APK；Android 包目前使用开发签名，请只从官网或 GitHub Release 下载。
+
 ## 当前能力
 
 - 导入单个/多个音乐文件，或递归扫描文件夹；以 SHA-256 和 SQLite 防重复入库。
@@ -11,6 +17,7 @@ Sona 不是在线曲库服务：它帮助你导入、整理和播放自己拥有
 - 音乐与本地 MV 管理、关联播放及 MV 专区。
 - 黑胶播放页、迷你播放条、音量/随机/循环/播放队列控制。
 - Windows 桌面布局与 Android 窄屏适配；播放器皮肤、自定义背景、头像和歌单封面。
+- 简体中文、繁體中文和 English 界面切换。
 - 云账号和同步基础设施；断网时仍以本地曲库为主，不依赖云端才能播放。
 - 歌曲信息智能校准：先清洗标签和文件名，再查询 MusicBrainz；Windows 可通过 Chromaprint/AcoustID 进行真正的音频声纹匹配。
 
