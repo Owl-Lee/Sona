@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/latest_snack_bar.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../account/presentation/account_sync_card.dart';
 import '../../library/application/library_controller.dart';
 import '../application/appearance_controller.dart';
+import '../application/language_controller.dart';
 import 'widgets/appearance_picker.dart';
 
-enum _SettingsSection { root, appearance, account, storage, about }
+enum _SettingsSection { root, appearance, account, language, storage, about }
 
 /// The shell owns system-back and tab switching, while this page owns the
 /// concrete secondary screen. Keeping only the depth public lets the shell
@@ -63,6 +65,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       }
     });
     final appearance = ref.watch(appearanceControllerProvider);
+    final language = ref.watch(languageControllerProvider).language;
     final library = ref.watch(libraryControllerProvider);
     final lightForeground =
         !appearance.usesCustom && appearance.preset.prefersLightHomeForeground;
@@ -75,12 +78,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             foreground: foreground,
             lightForeground: lightForeground,
             appearanceName: appearance.usesCustom
-                ? '我的背景'
+                ? context.tr('我的背景')
                 : appearance.preset.name,
+            language: language,
             onOpen: _open,
           ),
           _SettingsSection.appearance => _SettingsDetailPage(
-            title: '外观与播放器',
+            title: context.tr('外观与播放器'),
             foreground: foreground,
             lightForeground: lightForeground,
             onBack: _back,
@@ -90,21 +94,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
           _SettingsSection.account => _SettingsDetailPage(
-            title: '账号与云同步',
+            title: context.tr('账号与云同步'),
             foreground: foreground,
             lightForeground: lightForeground,
             onBack: _back,
             child: const AccountSyncCard(),
           ),
+          _SettingsSection.language => _SettingsDetailPage(
+            title: context.tr('语言'),
+            foreground: foreground,
+            lightForeground: lightForeground,
+            onBack: _back,
+            child: const _LanguagePanel(),
+          ),
           _SettingsSection.storage => _SettingsDetailPage(
-            title: '存储与数据',
+            title: context.tr('存储与数据'),
             foreground: foreground,
             lightForeground: lightForeground,
             onBack: _back,
             child: _StoragePanel(databasePath: library.databasePath),
           ),
           _SettingsSection.about => _SettingsDetailPage(
-            title: '关于',
+            title: context.tr('关于'),
             foreground: foreground,
             lightForeground: lightForeground,
             onBack: _back,
@@ -121,12 +132,14 @@ class _SettingsRoot extends StatelessWidget {
     required this.foreground,
     required this.lightForeground,
     required this.appearanceName,
+    required this.language,
     required this.onOpen,
   });
 
   final Color foreground;
   final bool lightForeground;
   final String appearanceName;
+  final AppLanguage language;
   final ValueChanged<_SettingsSection> onOpen;
 
   @override
@@ -146,7 +159,7 @@ class _SettingsRoot extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '设置',
+                    context.tr('设置'),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: foreground,
                       fontWeight: FontWeight.w900,
@@ -162,25 +175,31 @@ class _SettingsRoot extends StatelessWidget {
                     children: [
                       _SettingsMenuRow(
                         icon: Icons.palette_outlined,
-                        title: '外观与播放器',
+                        title: context.tr('外观与播放器'),
                         subtitle: appearanceName,
                         onTap: () => onOpen(_SettingsSection.appearance),
                       ),
                       _SettingsMenuRow(
                         icon: Icons.cloud_outlined,
-                        title: '账号与云同步',
-                        subtitle: '登录、头像与跨设备同步',
+                        title: context.tr('账号与云同步'),
+                        subtitle: context.tr('登录、头像与跨设备同步'),
                         onTap: () => onOpen(_SettingsSection.account),
                       ),
                       _SettingsMenuRow(
+                        icon: Icons.language_rounded,
+                        title: context.tr('语言'),
+                        subtitle: _languageName(context, language),
+                        onTap: () => onOpen(_SettingsSection.language),
+                      ),
+                      _SettingsMenuRow(
                         icon: Icons.storage_rounded,
-                        title: '存储与数据',
-                        subtitle: 'SQLite · 此设备',
+                        title: context.tr('存储与数据'),
+                        subtitle: 'SQLite · ${context.tr('此设备')}',
                         onTap: () => onOpen(_SettingsSection.storage),
                       ),
                       _SettingsMenuRow(
                         icon: Icons.info_outline_rounded,
-                        title: '关于',
+                        title: context.tr('关于'),
                         subtitle: 'Sona 0.4.26',
                         onTap: () => onOpen(_SettingsSection.about),
                         divider: false,
@@ -235,7 +254,7 @@ class _SettingsDetailPage extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.22),
                         shape: const CircleBorder(),
                         child: IconButton(
-                          tooltip: '返回设置',
+                          tooltip: context.tr('返回设置'),
                           onPressed: onBack,
                           icon: Icon(
                             Icons.arrow_back_rounded,
@@ -356,6 +375,163 @@ class _SettingsMenuRow extends StatelessWidget {
         ),
         if (divider) const Divider(height: 1, indent: 56, endIndent: 16),
       ],
+    );
+  }
+}
+
+String _languageName(BuildContext context, AppLanguage language) =>
+    switch (language) {
+      AppLanguage.simplifiedChinese => context.tr('简体中文'),
+      AppLanguage.traditionalChinese => context.tr('繁體中文'),
+      AppLanguage.english => context.tr('英文'),
+    };
+
+class _LanguagePanel extends ConsumerWidget {
+  const _LanguagePanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(languageControllerProvider).language;
+    final accent = ref.watch(appearanceControllerProvider).accent;
+    return _SettingsPanel(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.tr('选择界面语言'),
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            context.tr('切换后立即应用，并在下次启动时保留。'),
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          for (final language in AppLanguage.values) ...[
+            _LanguageChoice(
+              language: language,
+              selected: language == selected,
+              accent: accent,
+              onTap: () => ref
+                  .read(languageControllerProvider.notifier)
+                  .select(language),
+            ),
+            if (language != AppLanguage.values.last) const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageChoice extends StatelessWidget {
+  const _LanguageChoice({
+    required this.language,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final AppLanguage language;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final sample = switch (language) {
+      AppLanguage.simplifiedChinese => '简体中文',
+      AppLanguage.traditionalChinese => '繁體中文',
+      AppLanguage.english => 'English',
+    };
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(17),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: selected
+                ? accent.withValues(alpha: 0.20)
+                : Colors.white.withValues(alpha: 0.20),
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(
+              color: selected
+                  ? accent.withValues(alpha: 0.72)
+                  : Colors.white.withValues(alpha: 0.72),
+              width: selected ? 1.6 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 7),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? accent.withValues(alpha: 0.88)
+                      : Colors.white.withValues(alpha: 0.42),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  language == AppLanguage.english ? 'A' : '文',
+                  style: TextStyle(
+                    color: selected ? Colors.white : AppColors.ink,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  sample,
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 160),
+                child: selected
+                    ? Icon(
+                        Icons.check_circle_rounded,
+                        key: const ValueKey('selected'),
+                        color: accent,
+                        size: 25,
+                      )
+                    : const Icon(
+                        Icons.circle_outlined,
+                        key: ValueKey('idle'),
+                        color: AppColors.textSecondary,
+                        size: 23,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -505,9 +681,9 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '此设备数据库',
-                      style: TextStyle(
+                    Text(
+                      context.tr('此设备数据库'),
+                      style: const TextStyle(
                         color: AppColors.ink,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
@@ -516,7 +692,7 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                     const SizedBox(height: 7),
                     SelectableText(
                       widget.databasePath.isEmpty
-                          ? '正在读取数据库位置…'
+                          ? context.tr('正在读取数据库位置…')
                           : widget.databasePath,
                       style: const TextStyle(
                         color: AppColors.textSecondary,
@@ -550,9 +726,9 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '音频声纹识别',
-                      style: TextStyle(
+                    Text(
+                      context.tr('音频声纹识别'),
+                      style: const TextStyle(
                         color: AppColors.ink,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
@@ -561,8 +737,8 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                     const SizedBox(height: 4),
                     Text(
                       _acoustIdKey.isEmpty
-                          ? '未配置时仍可使用标签、文件名和 MusicBrainz 后备校准'
-                          : 'AcoustID 已配置 · 声纹不命中时自动回退公开曲库',
+                          ? context.tr('未配置时仍可使用标签、文件名和 MusicBrainz 后备校准')
+                          : context.tr('AcoustID 已配置 · 声纹不命中时自动回退公开曲库'),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         height: 1.35,
@@ -580,7 +756,9 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                       : Icons.check_circle_rounded,
                   size: 18,
                 ),
-                label: Text(_acoustIdKey.isEmpty ? '配置免费 Key' : '已启用'),
+                label: Text(
+                  context.tr(_acoustIdKey.isEmpty ? '配置免费 Key' : '已启用'),
+                ),
               ),
             ],
           ),
@@ -595,11 +773,11 @@ class _AboutPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _SettingsPanel(
-      padding: EdgeInsets.all(20),
+    return _SettingsPanel(
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 25,
             backgroundColor: AppColors.accent,
             child: Icon(
@@ -608,12 +786,12 @@ class _AboutPanel extends StatelessWidget {
               size: 28,
             ),
           ),
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Sona',
                   style: TextStyle(
                     color: AppColors.ink,
@@ -621,15 +799,15 @@ class _AboutPanel extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
-                  '版本 0.4.26 · Android / Windows',
-                  style: TextStyle(color: AppColors.textSecondary),
+                  context.tr('版本 0.4.26 · Android / Windows'),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
-          _Badge('Beta'),
+          const _Badge('Beta'),
         ],
       ),
     );
