@@ -33,6 +33,38 @@ class TrackArtwork extends StatelessWidget {
       track == null ? null : context.metadata(track!.title),
     );
     final labelLength = label.characters.length;
+    final displayLabel = artworkDisplayLabel(label);
+    final fontSize =
+        size *
+        switch (labelLength) {
+          <= 2 => 0.34,
+          3 => 0.29,
+          4 => 0.285,
+          _ => 0.265,
+        };
+    final baseTextStyle = TextStyle(
+      fontSize: fontSize,
+      height: 0.92,
+      fontWeight: FontWeight.w900,
+      letterSpacing: labelLength > 3 ? -0.18 : -0.08,
+    );
+    final textLines = labelLength > 3 ? 2 : 1;
+
+    Text artworkText(TextStyle style) {
+      return Text(
+        displayLabel,
+        maxLines: textLines,
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.clip,
+        textScaler: TextScaler.noScaling,
+        strutStyle: StrutStyle(
+          fontSize: fontSize,
+          height: 0.92,
+          forceStrutHeight: true,
+        ),
+        style: style,
+      );
+    }
 
     return Container(
       width: size,
@@ -53,20 +85,56 @@ class TrackArtwork extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: Text(
-        label,
-        maxLines: labelLength > 3 ? 2 : 1,
-        textAlign: TextAlign.center,
-        overflow: TextOverflow.clip,
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.94),
-          fontSize: size * (labelLength <= 2 ? 0.34 : 0.22),
-          height: 0.98,
-          fontWeight: FontWeight.w800,
+      child: SizedBox(
+        width: size * 0.9,
+        height: size * 0.8,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            artworkText(
+              baseTextStyle.copyWith(
+                foreground: Paint()
+                  ..color = Colors.black.withValues(alpha: 0.48)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = size <= 46 ? 0.7 : 0.82
+                  ..strokeJoin = StrokeJoin.round,
+              ),
+            ),
+            artworkText(
+              baseTextStyle.copyWith(
+                color: Colors.white,
+                shadows: const [
+                  Shadow(
+                    color: Color(0x66000000),
+                    blurRadius: 1.4,
+                    offset: Offset(0, 0.7),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Balances longer artwork labels over two crisp, readable lines.
+///
+/// The source label is never abbreviated again here: line breaks only change
+/// presentation, so a phrase such as “真的爱你” remains semantically complete.
+String artworkDisplayLabel(String label) {
+  final characters = label.characters.toList(growable: false);
+  if (characters.length <= 3) return label;
+
+  if (label.contains(' ')) {
+    final words = label.split(RegExp(r'\s+'));
+    if (words.length == 2) return '${words.first}\n${words.last}';
+  }
+
+  final split = characters.length ~/ 2;
+  return '${characters.take(split).join()}\n'
+      '${characters.skip(split).join()}';
 }
 
 String artworkLabelForTitle(String? title) {
