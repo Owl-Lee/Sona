@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/chinese_text.dart';
 import '../data/library_database.dart';
 import '../data/track_importer.dart';
 import '../data/track_identifier.dart';
@@ -378,20 +379,17 @@ class LibraryController extends StateNotifier<LibraryState> {
   ) async {
     final id = track.id;
     if (id == null) return null;
-    final title = candidate.title.trim();
-    final artist = candidate.artist.trim();
+    final title = toSimplifiedChinese(candidate.title).trim();
+    final artist = toSimplifiedChinese(candidate.artist).trim();
+    final album = toSimplifiedChinese(candidate.album).trim();
     if (title.isEmpty || artist.isEmpty) return null;
     await _database.updateTrackMetadata(
       id,
       title: title,
       artist: artist,
-      album: candidate.album,
+      album: album,
     );
-    final updated = track.copyWith(
-      title: title,
-      artist: artist,
-      album: candidate.album.trim(),
-    );
+    final updated = track.copyWith(title: title, artist: artist, album: album);
     state = state.copyWith(
       tracks: state.tracks
           .map((item) => item.id == id ? updated : item)
