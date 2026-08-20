@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/liquid_glass.dart';
@@ -89,7 +90,9 @@ class NowPlayingBar extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    track?.title ?? '还没有播放歌曲',
+                                    track == null
+                                        ? context.tr('还没有播放歌曲')
+                                        : context.metadata(track.title),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
@@ -98,7 +101,9 @@ class NowPlayingBar extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    track?.artist ?? '从曲库选择一首歌',
+                                    track == null
+                                        ? context.tr('从曲库选择一首歌')
+                                        : context.metadata(track.artist),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
@@ -171,15 +176,17 @@ class NowPlayingBar extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '还没有播放歌曲',
+                          context.tr('还没有播放歌曲'),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 3),
-                        const Text(
-                          '从曲库中选择一首歌，播放控制会出现在这里。',
+                        Text(
+                          context.tr('从曲库中选择一首歌，播放控制会出现在这里。'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -189,7 +196,7 @@ class NowPlayingBar extends ConsumerWidget {
                         Navigator.of(context)
                             .popUntil((route) => route.isFirst),
                     icon: const Icon(Icons.library_music_outlined),
-                    label: const Text('去曲库'),
+                    label: Text(context.tr('去曲库')),
                   ),
                 ],
               ),
@@ -283,7 +290,9 @@ class NowPlayingBar extends ConsumerWidget {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              currentTrack.title,
+                                              context.metadata(
+                                                currentTrack.title,
+                                              ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: Theme.of(context)
@@ -293,7 +302,9 @@ class NowPlayingBar extends ConsumerWidget {
                                             ),
                                             const SizedBox(height: 3),
                                             Text(
-                                              currentTrack.artist,
+                                              context.metadata(
+                                                currentTrack.artist,
+                                              ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: Theme.of(context)
@@ -321,7 +332,7 @@ class NowPlayingBar extends ConsumerWidget {
                                     activeColor: accent,
                                   ),
                                   IconButton(
-                                    tooltip: '上一首',
+                                    tooltip: context.tr('上一首'),
                                     onPressed: controller.previous,
                                     icon: const Icon(
                                       Icons.skip_previous_rounded,
@@ -351,14 +362,14 @@ class NowPlayingBar extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   IconButton(
-                                    tooltip: '下一首',
+                                    tooltip: context.tr('下一首'),
                                     onPressed: controller.next,
                                     icon: const Icon(Icons.skip_next_rounded),
                                     color: mutedForeground,
                                     iconSize: 31,
                                   ),
                                   IconButton(
-                                    tooltip: '播放队列',
+                                    tooltip: context.tr('播放队列'),
                                     onPressed: () =>
                                         PlayerInformation.showQueue(
                                           context,

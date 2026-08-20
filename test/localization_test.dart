@@ -20,8 +20,18 @@ void main() {
       const SonaLocalizations(
         Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
       ).text('设置'),
-      '設置',
+      '設定',
     );
     expect(const SonaLocalizations(Locale('zh')).text('设置'), '设置');
+  });
+
+  test('localizes metadata for display without changing the stored source', () {
+    const traditional = SonaLocalizations(
+      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+    );
+    const english = SonaLocalizations(Locale('en'));
+    expect(traditional.metadata('美丽的神话'), '美麗的神話');
+    expect(english.metadata('成龙'), 'Cheng Long');
+    expect(english.metadata('Eason Chan'), 'Eason Chan');
   });
 }

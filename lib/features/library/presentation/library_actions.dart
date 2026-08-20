@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/latest_snack_bar.dart';
 import '../application/library_controller.dart';
@@ -363,17 +364,19 @@ Future<void> showTrackContextMenu(
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('从本地曲库移除？'),
-          content: Text('“${track.title}”将不再显示在 Sona 中，电脑里的原始文件不会被删除。'),
+          title: Text(context.tr('从本地曲库移除？')),
+          content: Text(
+            '“${context.metadata(track.title)}”${context.tr('将不再显示在 Sona 中，电脑里的原始文件不会被删除。')}',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('取消'),
+              child: Text(context.tr('取消')),
             ),
             FilledButton.icon(
               onPressed: () => Navigator.pop(dialogContext, true),
               icon: const Icon(Icons.remove_circle_outline_rounded),
-              label: const Text('移除'),
+              label: Text(context.tr('移除')),
             ),
           ],
         ),
@@ -390,7 +393,7 @@ Future<String?> _chooseTrackAction(
   required TrackMenuSource source,
   Offset? position,
 }) {
-  final items = _trackMenuItems(track, source);
+  final items = _trackMenuItems(context, track, source);
   final overlay = Navigator.of(context).overlay;
   if (position != null &&
       overlay != null &&
@@ -436,12 +439,12 @@ Future<String?> _chooseTrackAction(
             ListTile(
               leading: TrackArtwork(track: track, size: 46, borderRadius: 12),
               title: Text(
-                track.title,
+                context.metadata(track.title),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
-                track.artist,
+                context.metadata(track.artist),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -465,23 +468,24 @@ Future<String?> _chooseTrackAction(
 }
 
 List<(String, IconData, String)> _trackMenuItems(
+  BuildContext context,
   Track track,
   TrackMenuSource source,
 ) => [
-  ('identify', Icons.auto_fix_high_rounded, 'AI 识别歌曲信息'),
+  ('identify', Icons.auto_fix_high_rounded, context.tr('AI 识别歌曲信息')),
   (
     'favorite',
     track.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-    track.isFavorite ? '取消收藏' : '收藏',
+    context.tr(track.isFavorite ? '取消收藏' : '收藏'),
   ),
-  ('playlist', Icons.playlist_add_rounded, '加入歌单'),
+  ('playlist', Icons.playlist_add_rounded, context.tr('加入歌单')),
   if (source == TrackMenuSource.recent)
-    ('source', Icons.history_toggle_off_rounded, '从最近播放中移除'),
+    ('source', Icons.history_toggle_off_rounded, context.tr('从最近播放中移除')),
   if (source == TrackMenuSource.ranking)
-    ('source', Icons.leaderboard_outlined, '从听歌排行中移除'),
+    ('source', Icons.leaderboard_outlined, context.tr('从听歌排行中移除')),
   if (source == TrackMenuSource.playlist)
-    ('source', Icons.playlist_remove_rounded, '从歌单中移除'),
-  ('library', Icons.remove_circle_outline_rounded, '从本地曲库移除'),
+    ('source', Icons.playlist_remove_rounded, context.tr('从歌单中移除')),
+  ('library', Icons.remove_circle_outline_rounded, context.tr('从本地曲库移除')),
 ];
 
 Future<void> _identifyTrack(
@@ -492,16 +496,16 @@ Future<void> _identifyTrack(
   showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const AlertDialog(
+    builder: (_) => AlertDialog(
       content: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox.square(
+          const SizedBox.square(
             dimension: 24,
             child: CircularProgressIndicator(strokeWidth: 2.5),
           ),
-          SizedBox(width: 16),
-          Flexible(child: Text('正在分析标签、文件名和公开曲库…')),
+          const SizedBox(width: 16),
+          Flexible(child: Text(context.tr('正在分析标签、文件名和公开曲库…'))),
         ],
       ),
     ),
@@ -527,11 +531,11 @@ Future<void> _identifyTrack(
   final accepted = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.auto_fix_high_rounded),
-          SizedBox(width: 10),
-          Text('识别结果'),
+          const Icon(Icons.auto_fix_high_rounded),
+          const SizedBox(width: 10),
+          Text(context.tr('识别结果')),
         ],
       ),
       content: ConstrainedBox(
@@ -540,31 +544,33 @@ Future<void> _identifyTrack(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(result.message),
+            Text(context.tr(result.message)),
             const SizedBox(height: 16),
             _MetadataComparisonRow(
-              label: '歌曲',
-              before: track.title,
-              after: candidate.title,
+              label: context.tr('歌曲'),
+              before: context.metadata(track.title),
+              after: context.metadata(candidate.title),
             ),
             _MetadataComparisonRow(
-              label: '歌手',
-              before: track.artist,
-              after: candidate.artist,
+              label: context.tr('歌手'),
+              before: context.metadata(track.artist),
+              after: context.metadata(candidate.artist),
             ),
             _MetadataComparisonRow(
-              label: '专辑',
-              before: track.album,
-              after: candidate.album.isEmpty ? '未提供' : candidate.album,
+              label: context.tr('专辑'),
+              before: context.metadata(track.album),
+              after: candidate.album.isEmpty
+                  ? context.tr('未提供')
+                  : context.metadata(candidate.album),
             ),
             const SizedBox(height: 12),
             Text(
-              '${candidate.source} · 可信度 ${(candidate.confidence * 100).round()}%',
+              '${context.tr(candidate.source)} · ${context.tr('可信度')} ${(candidate.confidence * 100).round()}%',
               style: Theme.of(dialogContext).textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
             Text(
-              candidate.explanation,
+              context.tr(candidate.explanation),
               style: Theme.of(dialogContext).textTheme.bodySmall,
             ),
           ],
@@ -573,12 +579,12 @@ Future<void> _identifyTrack(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('保留原信息'),
+          child: Text(context.tr('保留原信息')),
         ),
         FilledButton.icon(
           onPressed: () => Navigator.pop(dialogContext, true),
           icon: const Icon(Icons.check_rounded),
-          label: const Text('应用校准'),
+          label: Text(context.tr('应用校准')),
         ),
       ],
     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/sona_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/latest_snack_bar.dart';
@@ -225,7 +226,7 @@ class _TopHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '只属于你的音乐空间',
+                context.tr('只属于你的音乐空间'),
                 style: TextStyle(
                   color: dark
                       ? Colors.white.withValues(alpha: 0.88)
@@ -278,7 +279,7 @@ class _TopHeader extends StatelessWidget {
         FilledButton.icon(
           onPressed: onImport,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('导入音乐'),
+          label: Text(context.tr('导入音乐')),
           style: FilledButton.styleFrom(
             backgroundColor: accent.withValues(alpha: 0.84),
             foregroundColor: Colors.white,
@@ -334,22 +335,22 @@ class _QuickLibrary extends StatelessWidget {
     final cards = [
       _QuickCardData(
         Icons.music_note_rounded,
-        '本地歌曲',
-        '${library.tracks.length} 首',
+        context.tr('本地歌曲'),
+        '${library.tracks.length}${context.tr('首')}',
         AppColors.accent,
         LibraryFilter.all,
       ),
       _QuickCardData(
         Icons.favorite_rounded,
-        '我的收藏',
-        '${library.tracks.where((item) => item.isFavorite).length} 首',
+        context.tr('我的收藏'),
+        '${library.tracks.where((item) => item.isFavorite).length}${context.tr('首')}',
         const Color(0xFF8A65F7),
         LibraryFilter.favorites,
       ),
       _QuickCardData(
         Icons.video_library_rounded,
-        '已配对 MV',
-        '${library.tracks.where((item) => item.hasVideo || item.isVideoOnly).length} 个',
+        context.tr('已配对 MV'),
+        '${library.tracks.where((item) => item.hasVideo || item.isVideoOnly).length} ${context.tr('个')}',
         const Color(0xFF267EDB),
         LibraryFilter.videos,
       ),
@@ -593,7 +594,7 @@ class _RecentList extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            track.title,
+                            context.metadata(track.title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -603,7 +604,7 @@ class _RecentList extends ConsumerWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${track.artist}  ·  ${track.album}',
+                            '${context.metadata(track.artist)}  ·  ${context.metadata(track.album)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -945,12 +946,12 @@ class _RankingPreview extends ConsumerWidget {
                         ),
                       ),
                       title: Text(
-                        items[index].title,
+                        context.metadata(items[index].title),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        items[index].artist,
+                        context.metadata(items[index].artist),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
