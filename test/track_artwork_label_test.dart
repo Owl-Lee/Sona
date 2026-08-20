@@ -12,4 +12,11 @@ void main() {
   test('removes download noise before building the artwork label', () {
     expect(artworkLabelForTitle('01 - 【4K60FPS】《消愁》'), '消愁');
   });
+
+  test('balances longer artwork labels without dropping title characters', () {
+    expect(artworkDisplayLabel('真的爱你'), '真的\n爱你');
+    expect(artworkDisplayLabel('可惜没如果'), '可惜\n没如果');
+    expect(artworkDisplayLabel('美丽的神话'), '美丽\n的神话');
+    expect(artworkDisplayLabel('MEI LI'), 'MEI\nLI');
+  });
 }
