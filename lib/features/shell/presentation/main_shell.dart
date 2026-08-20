@@ -770,160 +770,168 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                   // capsules and the scrollbar. Moving the whole scroll view
                   // also moved the capsules, so the thumb could still sit on
                   // top of a selected item on narrow layouts.
-                  child: Scrollbar(
-                    controller: _scrollController,
-                    thumbVisibility: true,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 22),
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        padding: EdgeInsets.zero,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                context.tr('我的音乐'),
-                                style: TextStyle(
-                                  color: mutedForeground,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.1,
+                  child: ScrollConfiguration(
+                    // Flutter desktop automatically decorates scroll views
+                    // with a scrollbar. This sidebar already owns a visible
+                    // scrollbar with a reserved gutter, so allowing the
+                    // platform decoration as well renders two parallel thumbs.
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
+                    child: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 22),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: Text(
+                                  context.tr('我的音乐'),
+                                  style: TextStyle(
+                                    color: mutedForeground,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.1,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.home_rounded,
-                              label: context.tr('首页'),
-                              selected: selectedIndex == 0,
-                              onTap: () => onSelected(0),
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.library_music_rounded,
-                              label: context.tr('本地曲库'),
-                              selected:
-                                  selectedIndex == 1 &&
-                                  libraryFilter == LibraryFilter.all,
-                              onTap: () => onSelected(1),
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.queue_music_rounded,
-                              label: context.tr('我的歌单'),
-                              selected: selectedIndex == 2,
-                              onTap: () => onSelected(2),
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.favorite_rounded,
-                              label:
-                                  '${context.tr('我的收藏')} · ${library.tracks.where((item) => item.isFavorite).length}',
-                              selected:
-                                  selectedIndex == 1 &&
-                                  libraryFilter == LibraryFilter.favorites,
-                              onTap: onFavorites,
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.history_rounded,
-                              label: context.tr('最近播放'),
-                              selected:
-                                  selectedIndex == 1 &&
-                                  libraryFilter == LibraryFilter.recent,
-                              onTap: onRecent,
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.ondemand_video_rounded,
-                              label: context.tr('MV 专区'),
-                              selected:
-                                  selectedIndex == 1 &&
-                                  libraryFilter == LibraryFilter.videos,
-                              onTap: onVideos,
-                            ),
-                            _NavigationItem(
-                              accent: appearance.accent,
-                              lightForeground: useLightForeground,
-                              icon: Icons.leaderboard_rounded,
-                              label: context.tr('听歌排行'),
-                              selected: selectedIndex == 4,
-                              onTap: onRankings,
-                            ),
-                            if (library.playlists.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 12),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        context.tr('常用歌单'),
-                                        style: TextStyle(
-                                          color: mutedForeground,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
+                              const SizedBox(height: 12),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.home_rounded,
+                                label: context.tr('首页'),
+                                selected: selectedIndex == 0,
+                                onTap: () => onSelected(0),
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.library_music_rounded,
+                                label: context.tr('本地曲库'),
+                                selected:
+                                    selectedIndex == 1 &&
+                                    libraryFilter == LibraryFilter.all,
+                                onTap: () => onSelected(1),
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.queue_music_rounded,
+                                label: context.tr('我的歌单'),
+                                selected: selectedIndex == 2,
+                                onTap: () => onSelected(2),
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.favorite_rounded,
+                                label:
+                                    '${context.tr('我的收藏')} · ${library.tracks.where((item) => item.isFavorite).length}',
+                                selected:
+                                    selectedIndex == 1 &&
+                                    libraryFilter == LibraryFilter.favorites,
+                                onTap: onFavorites,
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.history_rounded,
+                                label: context.tr('最近播放'),
+                                selected:
+                                    selectedIndex == 1 &&
+                                    libraryFilter == LibraryFilter.recent,
+                                onTap: onRecent,
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.ondemand_video_rounded,
+                                label: context.tr('MV 专区'),
+                                selected:
+                                    selectedIndex == 1 &&
+                                    libraryFilter == LibraryFilter.videos,
+                                onTap: onVideos,
+                              ),
+                              _NavigationItem(
+                                accent: appearance.accent,
+                                lightForeground: useLightForeground,
+                                icon: Icons.leaderboard_rounded,
+                                label: context.tr('听歌排行'),
+                                selected: selectedIndex == 4,
+                                onTap: onRankings,
+                              ),
+                              if (library.playlists.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 12),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          context.tr('常用歌单'),
+                                          style: TextStyle(
+                                            color: mutedForeground,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      tooltip: context.tr('选择常用歌单'),
-                                      onPressed: onConfigurePlaylists,
-                                      icon: const Icon(
-                                        Icons.tune_rounded,
-                                        size: 17,
+                                      IconButton(
+                                        tooltip: context.tr('选择常用歌单'),
+                                        onPressed: onConfigurePlaylists,
+                                        icon: const Icon(
+                                          Icons.tune_rounded,
+                                          size: 17,
+                                        ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      tooltip: context.tr(
-                                        playlistsExpanded ? '折叠' : '展开',
+                                      IconButton(
+                                        tooltip: context.tr(
+                                          playlistsExpanded ? '折叠' : '展开',
+                                        ),
+                                        onPressed: onTogglePlaylists,
+                                        icon: Icon(
+                                          playlistsExpanded
+                                              ? Icons.expand_less_rounded
+                                              : Icons.expand_more_rounded,
+                                          size: 19,
+                                        ),
                                       ),
-                                      onPressed: onTogglePlaylists,
-                                      icon: Icon(
-                                        playlistsExpanded
-                                            ? Icons.expand_less_rounded
-                                            : Icons.expand_more_rounded,
-                                        size: 19,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              if (playlistsExpanded) ...[
-                                const SizedBox(height: 3),
-                                ...library.playlists
-                                    .where(
-                                      (playlist) => pinnedPlaylistIds == null
-                                          ? true
-                                          : pinnedPlaylistIds.contains(
-                                              playlist.id,
-                                            ),
-                                    )
-                                    .take(5)
-                                    .map(
-                                      (playlist) => _NavigationItem(
-                                        accent: appearance.accent,
-                                        lightForeground: useLightForeground,
-                                        icon: Icons.music_note_rounded,
-                                        label: playlist.name,
-                                        selected: false,
-                                        onTap: () => onPlaylist(playlist.id),
+                                if (playlistsExpanded) ...[
+                                  const SizedBox(height: 3),
+                                  ...library.playlists
+                                      .where(
+                                        (playlist) => pinnedPlaylistIds == null
+                                            ? true
+                                            : pinnedPlaylistIds.contains(
+                                                playlist.id,
+                                              ),
+                                      )
+                                      .take(5)
+                                      .map(
+                                        (playlist) => _NavigationItem(
+                                          accent: appearance.accent,
+                                          lightForeground: useLightForeground,
+                                          icon: Icons.music_note_rounded,
+                                          label: playlist.name,
+                                          selected: false,
+                                          onTap: () => onPlaylist(playlist.id),
+                                        ),
                                       ),
-                                    ),
+                                ],
                               ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
