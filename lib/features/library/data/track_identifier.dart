@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:path/path.dart' as path_util;
 
+import '../../../core/utils/chinese_text.dart';
 import '../domain/track.dart';
 import '../domain/track_identification.dart';
 
@@ -64,9 +65,9 @@ class TrackIdentifier {
     if (localChanged && hints.title.isNotEmpty) {
       return TrackIdentificationResult(
         candidate: TrackIdentificationCandidate(
-          title: hints.title,
-          artist: hints.artist,
-          album: hints.album,
+          title: toSimplifiedChinese(hints.title),
+          artist: toSimplifiedChinese(hints.artist),
+          album: toSimplifiedChinese(hints.album),
           confidence: 0.52,
           source: '本地智能清洗',
           explanation: '公开曲库没有可靠结果，仅根据标签和文件名给出建议，请确认后再应用。',
@@ -212,9 +213,9 @@ class TrackIdentifier {
         .firstWhere((item) => item.isNotEmpty, orElse: () => '');
     if (title.isEmpty || artist.isEmpty) return null;
     return TrackIdentificationCandidate(
-      title: title,
-      artist: artist,
-      album: album,
+      title: toSimplifiedChinese(title),
+      artist: toSimplifiedChinese(artist),
+      album: toSimplifiedChinese(album),
       confidence: confidence.clamp(0, 1),
       source: 'AcoustID 音频声纹',
       explanation: '根据音频内容匹配，与文件名无关。',
@@ -330,9 +331,9 @@ class TrackIdentifier {
         artistSimilarity * 0.18 +
         durationSimilarity * 0.10;
     return TrackIdentificationCandidate(
-      title: title,
-      artist: artist,
-      album: album,
+      title: toSimplifiedChinese(title),
+      artist: toSimplifiedChinese(artist),
+      album: toSimplifiedChinese(album),
       confidence: confidence.clamp(0, 1),
       source: 'MusicBrainz 公开曲库',
       explanation: '根据清洗后的曲名、歌手和时长进行联网校准，并非声纹命中。',
