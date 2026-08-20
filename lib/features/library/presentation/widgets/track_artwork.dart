@@ -44,9 +44,9 @@ class TrackArtwork extends StatelessWidget {
         };
     final baseTextStyle = TextStyle(
       fontSize: fontSize,
-      height: 0.92,
-      fontWeight: FontWeight.w900,
-      letterSpacing: labelLength > 3 ? -0.18 : -0.08,
+      height: 0.96,
+      fontWeight: FontWeight.w700,
+      letterSpacing: labelLength > 3 ? -0.08 : 0,
     );
     final textLines = labelLength > 3 ? 2 : 1;
 
@@ -59,7 +59,7 @@ class TrackArtwork extends StatelessWidget {
         textScaler: TextScaler.noScaling,
         strutStyle: StrutStyle(
           fontSize: fontSize,
-          height: 0.92,
+          height: 0.96,
           forceStrutHeight: true,
         ),
         style: style,
@@ -88,31 +88,19 @@ class TrackArtwork extends StatelessWidget {
       child: SizedBox(
         width: size * 0.9,
         height: size * 0.8,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            artworkText(
-              baseTextStyle.copyWith(
-                foreground: Paint()
-                  ..color = Colors.black.withValues(alpha: 0.48)
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = size <= 46 ? 0.7 : 0.82
-                  ..strokeJoin = StrokeJoin.round,
-              ),
+        child: Center(
+          child: artworkText(
+            baseTextStyle.copyWith(
+              color: Colors.white,
+              shadows: const [
+                Shadow(
+                  color: Color(0x4D000000),
+                  blurRadius: 0.8,
+                  offset: Offset(0, 0.5),
+                ),
+              ],
             ),
-            artworkText(
-              baseTextStyle.copyWith(
-                color: Colors.white,
-                shadows: const [
-                  Shadow(
-                    color: Color(0x66000000),
-                    blurRadius: 1.4,
-                    offset: Offset(0, 0.7),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
