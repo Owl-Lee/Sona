@@ -442,6 +442,7 @@ Future<String?> _chooseTrackAction(
                 context.metadata(track.title),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: AppTheme.trackTitleStyle,
               ),
               subtitle: Text(
                 context.metadata(track.artist),

@@ -1376,7 +1376,7 @@ class _CloudTrackRow extends StatelessWidget {
                     context.metadata(track.title),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    style: AppTheme.trackTitleStyle,
                   ),
                   const SizedBox(height: 2),
                   Text(

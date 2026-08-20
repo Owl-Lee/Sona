@@ -597,9 +597,8 @@ class _RecentList extends ConsumerWidget {
                             context.metadata(track.title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: AppTheme.trackTitleStyle.copyWith(
                               color: selected ? accent : AppColors.ink,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -949,6 +948,7 @@ class _RankingPreview extends ConsumerWidget {
                         context.metadata(items[index].title),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: AppTheme.trackTitleStyle,
                       ),
                       subtitle: Text(
                         context.metadata(items[index].artist),

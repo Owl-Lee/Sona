@@ -1132,12 +1132,12 @@ class _DesktopTrackList extends StatelessWidget {
                                           context.metadata(track.title),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: selected
-                                                ? accent
-                                                : AppColors.ink,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                          style: AppTheme.trackTitleStyle
+                                              .copyWith(
+                                                color: selected
+                                                    ? accent
+                                                    : AppColors.ink,
+                                              ),
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
@@ -1344,11 +1344,10 @@ class _MobileTrackList extends StatelessWidget {
                                       context.metadata(track.title),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
+                                      style: AppTheme.trackTitleStyle.copyWith(
                                         color: selected
                                             ? accent
                                             : AppColors.ink,
-                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),

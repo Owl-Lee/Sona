@@ -2136,7 +2136,7 @@ class _DesktopMvControlBar extends ConsumerWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 15,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             const SizedBox(height: 3),
@@ -2610,9 +2610,11 @@ class PlayerInformation extends ConsumerWidget {
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                   style: TextStyle(
+                                                    fontSize: 14,
+                                                    height: 1.24,
                                                     fontWeight: current
-                                                        ? FontWeight.w800
-                                                        : FontWeight.w600,
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w500,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
@@ -2726,6 +2728,7 @@ class PlayerInformation extends ConsumerWidget {
                         item.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: AppTheme.trackTitleStyle,
                       ),
                       subtitle: Text(item.artist),
                       trailing: current
