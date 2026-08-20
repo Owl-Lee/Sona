@@ -21,6 +21,25 @@ abstract final class AppColors {
 }
 
 abstract final class AppTheme {
+  /// Compact music-row typography, tuned to the same restrained hierarchy as
+  /// modern desktop sidebars: titles stay crisp without looking artificially
+  /// bold, while artist/album metadata sits one quiet step below.
+  static const trackTitleStyle = TextStyle(
+    color: AppColors.ink,
+    fontSize: 14,
+    height: 1.24,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0,
+  );
+
+  static const trackSubtitleStyle = TextStyle(
+    color: AppColors.textSecondary,
+    fontSize: 12,
+    height: 1.24,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+  );
+
   static ThemeData get light {
     const colorScheme = ColorScheme.light(
       primary: AppColors.accent,

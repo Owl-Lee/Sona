@@ -45,7 +45,7 @@ class TrackArtwork extends StatelessWidget {
     final baseTextStyle = TextStyle(
       fontSize: fontSize,
       height: 0.96,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       letterSpacing: labelLength > 3 ? -0.08 : 0,
     );
     final textLines = labelLength > 3 ? 2 : 1;

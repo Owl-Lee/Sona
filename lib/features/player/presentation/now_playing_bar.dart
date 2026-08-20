@@ -95,9 +95,7 @@ class NowPlayingBar extends ConsumerWidget {
                                         : context.metadata(track.title),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
+                                    style: AppTheme.trackTitleStyle,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(

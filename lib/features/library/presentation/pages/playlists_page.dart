@@ -650,6 +650,7 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
                                   context.metadata(track.title),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: AppTheme.trackTitleStyle,
                                 ),
                                 subtitle: Text(context.metadata(track.artist)),
                                 trailing: Text(formatDuration(track.duration)),
@@ -826,6 +827,7 @@ class _AddTracksDialogState extends ConsumerState<_AddTracksDialog> {
                           context.metadata(track.title),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: AppTheme.trackTitleStyle,
                         ),
                         subtitle: Text(context.metadata(track.artist)),
                         onChanged: (_) => setState(
