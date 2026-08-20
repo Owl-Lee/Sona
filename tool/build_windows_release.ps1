@@ -7,14 +7,14 @@ Builds the Windows Release and refreshes the desktop shortcut.
 param()
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$flutter = Join-Path $projectRoot '..\work\flutter-sdk\flutter\bin\flutter.bat'
-$python = '%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+$flutter = (Get-Command flutter -ErrorAction SilentlyContinue).Source
+$python = (Get-Command python -ErrorAction SilentlyContinue).Source
 
-if (-not (Test-Path -LiteralPath $flutter -PathType Leaf)) {
-  throw "Bundled Flutter SDK was not found: $flutter"
+if (-not $flutter -or -not (Test-Path -LiteralPath $flutter -PathType Leaf)) {
+  throw 'Flutter was not found on PATH.'
 }
-if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
-  throw "Bundled Python runtime was not found: $python"
+if (-not $python -or -not (Test-Path -LiteralPath $python -PathType Leaf)) {
+  throw 'Python was not found on PATH.'
 }
 
 & $python (Join-Path $PSScriptRoot 'prepare_windows_icon.py')
