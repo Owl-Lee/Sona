@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/latest_snack_bar.dart';
@@ -1114,7 +1115,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 child: Text(
-                  track.title,
+                  context.metadata(track.title),
                   key: ValueKey(track.id),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1628,10 +1629,16 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage>
             children: [
               ListTile(
                 leading: const Icon(Icons.info_outline_rounded),
-                title: Text(track?.title ?? '当前没有歌曲'),
+                title: Text(
+                  track == null
+                      ? context.tr('当前没有歌曲')
+                      : context.metadata(track.title),
+                ),
                 subtitle: track == null
                     ? null
-                    : Text('${track.artist} · ${track.album}'),
+                    : Text(
+                        '${context.metadata(track.artist)} · ${context.metadata(track.album)}',
+                      ),
               ),
               ListTile(
                 enabled: track != null,
@@ -2121,7 +2128,9 @@ class _DesktopMvControlBar extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              track?.title ?? '还没有播放歌曲',
+                              track == null
+                                  ? context.tr('还没有播放歌曲')
+                                  : context.metadata(track!.title),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -2134,7 +2143,7 @@ class _DesktopMvControlBar extends ConsumerWidget {
                             Text(
                               track == null
                                   ? '从曲库中选择一首歌曲'
-                                  : '${track!.artist}  ·  ${track!.album}',
+                                  : '${context.metadata(track!.artist)}  ·  ${context.metadata(track!.album)}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -2304,7 +2313,9 @@ class PlayerInformation extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  track?.title ?? '还没有播放歌曲',
+                  track == null
+                      ? context.tr('还没有播放歌曲')
+                      : context.metadata(track!.title),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -2338,7 +2349,9 @@ class PlayerInformation extends ConsumerWidget {
           )
         else
           Text(
-            track?.title ?? '还没有播放歌曲',
+            track == null
+                ? context.tr('还没有播放歌曲')
+                : context.metadata(track!.title),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -2350,7 +2363,9 @@ class PlayerInformation extends ConsumerWidget {
           ),
         SizedBox(height: compact ? 4 : 8),
         Text(
-          track == null ? '从曲库中选择一首歌' : '${track!.artist}  ·  ${track!.album}',
+          track == null
+              ? context.tr('从曲库中选择一首歌')
+              : '${context.metadata(track!.artist)}  ·  ${context.metadata(track!.album)}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

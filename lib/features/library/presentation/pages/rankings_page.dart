@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/sona_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/item_snap_scroll_physics.dart';
 import '../../../../core/widgets/liquid_glass.dart';
@@ -266,11 +267,13 @@ class _RankingsPageState extends ConsumerState<RankingsPage> {
                                               ),
                                             ),
                                             title: Text(
-                                              track.title,
+                                              context.metadata(track.title),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                            subtitle: Text(track.artist),
+                                            subtitle: Text(
+                                              context.metadata(track.artist),
+                                            ),
                                             trailing: SizedBox(
                                               width: 88,
                                               child: _RankingCountBadge(

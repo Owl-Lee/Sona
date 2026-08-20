@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/localization/sona_localizations.dart';
+
 import 'package:path/path.dart' as path_util;
 import 'package:path_provider/path_provider.dart';
 
@@ -644,11 +647,11 @@ class _PlaylistDetailDialogState extends ConsumerState<_PlaylistDetailDialog> {
                                         borderRadius: 11,
                                       ),
                                 title: Text(
-                                  track.title,
+                                  context.metadata(track.title),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                subtitle: Text(track.artist),
+                                subtitle: Text(context.metadata(track.artist)),
                                 trailing: Text(formatDuration(track.duration)),
                                 onLongPress: _selecting ? null : showActions,
                                 onTap: _selecting
@@ -820,11 +823,11 @@ class _AddTracksDialogState extends ConsumerState<_AddTracksDialog> {
                           borderRadius: 10,
                         ),
                         title: Text(
-                          track.title,
+                          context.metadata(track.title),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        subtitle: Text(track.artist),
+                        subtitle: Text(context.metadata(track.artist)),
                         onChanged: (_) => setState(
                           () => checked
                               ? _selected.remove(track.id)

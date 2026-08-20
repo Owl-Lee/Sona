@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/sona_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/track.dart';
 
@@ -28,7 +29,10 @@ class TrackArtwork extends StatelessWidget {
     final seed =
         track?.contentHash.codeUnits.fold<int>(0, (a, b) => a + b) ?? 0;
     final palette = _palettes[seed % _palettes.length];
-    final initial = _artworkInitial(track?.title);
+    final label = artworkLabelForTitle(
+      track == null ? null : context.metadata(track!.title),
+    );
+    final labelLength = label.characters.length;
 
     return Container(
       width: size,
@@ -50,25 +54,63 @@ class TrackArtwork extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        initial,
+        label,
+        maxLines: labelLength > 3 ? 2 : 1,
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.clip,
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.94),
-          fontSize: size * 0.38,
+          fontSize: size * (labelLength <= 2 ? 0.34 : 0.22),
+          height: 0.98,
           fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
+}
 
-  String _artworkInitial(String? title) {
-    if (title == null || title.trim().isEmpty) return '♫';
-    // Skip filename punctuation such as 《》, brackets and quotes. Those were
-    // becoming accidental "logos" on imported song artwork.
-    for (final character in title.trim().characters) {
-      if (RegExp(r'[A-Za-z0-9\u3400-\u9FFF]').hasMatch(character)) {
-        return character.toUpperCase();
-      }
+String artworkLabelForTitle(String? title) {
+  if (title == null || title.trim().isEmpty) return '♫';
+  final cleaned = title
+      .replaceAll(RegExp(r'^\s*\d{1,3}\s*[-._、]\s*'), '')
+      .replaceAll(RegExp(r'[【\[].*?[】\]]'), ' ')
+      .replaceAll(RegExp(r'[《》“”"()]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  if (cleaned.isEmpty) return '♫';
+
+  // Prefer the first complete phrase. This keeps labels such as “美丽的神话”
+  // and “像我这样的人” intact instead of reducing every cover to one glyph.
+  var phrase = cleaned
+      .split(RegExp(r'\s*[·•|/—–-]\s*'))
+      .firstWhere((part) => part.trim().isNotEmpty, orElse: () => cleaned)
+      .trim();
+  final containsChinese = RegExp(r'[\u3400-\u9FFF]').hasMatch(phrase);
+  if (containsChinese && phrase.contains(' ')) {
+    phrase = phrase.split(RegExp(r'\s+')).first;
+  } else if (!containsChinese && phrase.contains(' ')) {
+    final words = phrase.split(RegExp(r'\s+'));
+    final complete = <String>[];
+    for (final word in words) {
+      final candidate = [...complete, word].join(' ');
+      if (candidate.characters.length > 6) break;
+      complete.add(word);
     }
-    return '♫';
+    phrase = complete.isEmpty ? words.first : complete.join(' ');
   }
+  final characters = phrase.characters.toList(growable: false);
+  if (characters.length <= 6) return phrase.toUpperCase();
+
+  // At six glyphs, step back to a semantic particle when possible rather
+  // than cutting immediately after it.
+  const particles = {'的', '之', '与', '和', '與'};
+  var end = 6;
+  for (var index = 5; index >= 3; index--) {
+    if (particles.contains(characters[index])) {
+      end = index;
+      break;
+    }
+  }
+  if (end < 3) end = 6;
+  return characters.take(end).join().toUpperCase();
 }

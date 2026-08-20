@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/latest_request_gate.dart';
 import '../../../core/widgets/latest_snack_bar.dart';
@@ -690,7 +691,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
                 removing: sync.removingCloudTrackId == track.id,
                 opening: _openingCloudTrackId == track.id,
                 subtitle:
-                    '${_displayArtist(track)} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
+                    '${context.metadata(_displayArtist(track))} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
                 onPlay: () => _playCloudTrack(track, tracks),
                 onDelete: () => _confirmDelete(track),
               );
@@ -713,7 +714,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
                 removing: sync.removingCloudTrackId == track.id,
                 opening: _openingCloudTrackId == track.id,
                 subtitle:
-                    '${track.album.isEmpty ? '未标注专辑' : track.album} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
+                    '${track.album.isEmpty ? context.tr('未标注专辑') : context.metadata(track.album)} · ${_formatDuration(track.duration)} · ${_formatBytes(track.fileSize)}',
                 onPlay: () => _playCloudTrack(track, group.value),
                 onDelete: () => _confirmDelete(track),
               ),
@@ -790,12 +791,27 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
         ),
         prefixIcon: const Icon(Icons.sort_rounded),
       ),
-      items: const [
-        DropdownMenuItem(value: _CloudTrackSort.recent, child: Text('最近同步')),
-        DropdownMenuItem(value: _CloudTrackSort.title, child: Text('曲名 A–Z')),
-        DropdownMenuItem(value: _CloudTrackSort.artist, child: Text('歌手 A–Z')),
-        DropdownMenuItem(value: _CloudTrackSort.album, child: Text('专辑 A–Z')),
-        DropdownMenuItem(value: _CloudTrackSort.size, child: Text('文件大小')),
+      items: [
+        DropdownMenuItem(
+          value: _CloudTrackSort.recent,
+          child: Text(context.tr('最近同步')),
+        ),
+        DropdownMenuItem(
+          value: _CloudTrackSort.title,
+          child: Text(context.tr('曲名 A–Z')),
+        ),
+        DropdownMenuItem(
+          value: _CloudTrackSort.artist,
+          child: Text(context.tr('歌手 A–Z')),
+        ),
+        DropdownMenuItem(
+          value: _CloudTrackSort.album,
+          child: Text(context.tr('专辑 A–Z')),
+        ),
+        DropdownMenuItem(
+          value: _CloudTrackSort.size,
+          child: Text(context.tr('文件大小')),
+        ),
       ],
       onChanged: (value) {
         if (value != null) setState(() => _sort = value);
@@ -1234,7 +1250,7 @@ class _CloudArtistGroup extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        artist,
+                        context.metadata(artist),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w800),
@@ -1325,16 +1341,16 @@ class _CloudTrackRow extends StatelessWidget {
                     ),
                     Offset.zero & overlayBox.size,
                   ),
-                  items: const [
+                  items: [
                     PopupMenuItem<String>(
                       value: 'delete',
                       height: 42,
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline_rounded, size: 19),
-                          SizedBox(width: 8),
-                          Text('从云端删除'),
+                          const Icon(Icons.delete_outline_rounded, size: 19),
+                          const SizedBox(width: 8),
+                          Text(context.tr('从云端删除')),
                         ],
                       ),
                     ),
@@ -1357,7 +1373,7 @@ class _CloudTrackRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    track.title,
+                    context.metadata(track.title),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -1376,7 +1392,7 @@ class _CloudTrackRow extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: '从云端删除',
+              tooltip: context.tr('从云端删除'),
               onPressed: removing || opening ? null : onDelete,
               icon: removing || opening
                   ? const SizedBox(

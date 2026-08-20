@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/sona_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/item_snap_scroll_physics.dart';
@@ -1128,7 +1129,7 @@ class _DesktopTrackList extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          track.title,
+                                          context.metadata(track.title),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -1140,7 +1141,7 @@ class _DesktopTrackList extends StatelessWidget {
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
-                                          track.artist,
+                                          context.metadata(track.artist),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: Theme.of(context)
@@ -1160,7 +1161,7 @@ class _DesktopTrackList extends StatelessWidget {
                                   horizontal: 12,
                                 ),
                                 child: Text(
-                                  track.album,
+                                  context.metadata(track.album),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium,
@@ -1192,7 +1193,9 @@ class _DesktopTrackList extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    tooltip: track.isFavorite ? '取消收藏' : '收藏',
+                                    tooltip: context.tr(
+                                      track.isFavorite ? '取消收藏' : '收藏',
+                                    ),
                                     iconSize: 19,
                                     onPressed: () => onFavorite(track),
                                     color: track.isFavorite
@@ -1338,7 +1341,7 @@ class _MobileTrackList extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      track.title,
+                                      context.metadata(track.title),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -1358,7 +1361,7 @@ class _MobileTrackList extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${track.artist}  ·  ${track.album}',
+                                '${context.metadata(track.artist)}  ·  ${context.metadata(track.album)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
