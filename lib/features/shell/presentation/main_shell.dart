@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../core/localization/sona_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/liquid_glass.dart';
 import '../../account/application/account_controller.dart';
@@ -247,26 +248,30 @@ class _MainShellState extends ConsumerState<MainShell> {
                           labelTextStyle: const WidgetStatePropertyAll(
                             TextStyle(fontSize: 11, height: 1.05),
                           ),
-                          destinations: const [
+                          destinations: [
                             NavigationDestination(
-                              icon: Icon(Icons.home_outlined),
-                              selectedIcon: Icon(Icons.home_rounded),
-                              label: '首页',
+                              icon: const Icon(Icons.home_outlined),
+                              selectedIcon: const Icon(Icons.home_rounded),
+                              label: context.tr('首页'),
                             ),
                             NavigationDestination(
-                              icon: Icon(Icons.library_music_outlined),
-                              selectedIcon: Icon(Icons.library_music_rounded),
-                              label: '曲库',
+                              icon: const Icon(Icons.library_music_outlined),
+                              selectedIcon: const Icon(
+                                Icons.library_music_rounded,
+                              ),
+                              label: context.tr('曲库'),
                             ),
                             NavigationDestination(
-                              icon: Icon(Icons.queue_music_outlined),
-                              selectedIcon: Icon(Icons.queue_music_rounded),
-                              label: '歌单',
+                              icon: const Icon(Icons.queue_music_outlined),
+                              selectedIcon: const Icon(
+                                Icons.queue_music_rounded,
+                              ),
+                              label: context.tr('歌单'),
                             ),
                             NavigationDestination(
-                              icon: Icon(Icons.settings_outlined),
-                              selectedIcon: Icon(Icons.settings_rounded),
-                              label: '设置',
+                              icon: const Icon(Icons.settings_outlined),
+                              selectedIcon: const Icon(Icons.settings_rounded),
+                              label: context.tr('设置'),
                             ),
                           ],
                         ),
@@ -312,7 +317,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, update) => AlertDialog(
-          title: const Text('选择常用歌单'),
+          title: Text(context.tr('选择常用歌单')),
           content: SizedBox(
             width: 420,
             child: ListView(
@@ -322,7 +327,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                     (playlist) => CheckboxListTile(
                       value: selected.contains(playlist.id),
                       title: Text(playlist.name),
-                      subtitle: Text('${playlist.trackCount} 首'),
+                      subtitle: Text(
+                        '${playlist.trackCount}${context.tr('首')}',
+                      ),
                       onChanged: (_) => update(
                         () => selected.contains(playlist.id)
                             ? selected.remove(playlist.id)
@@ -336,11 +343,11 @@ class _MainShellState extends ConsumerState<MainShell> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: Text(context.tr('取消')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, selected),
-              child: const Text('保存'),
+              child: Text(context.tr('保存')),
             ),
           ],
         ),
@@ -537,7 +544,7 @@ class _MobileBottomNavigationItem extends StatelessWidget {
     return Semantics(
       selected: selected,
       button: true,
-      label: item.label,
+      label: context.tr(item.label),
       child: InkWell(
         onTap: onTap,
         splashFactory: NoSplash.splashFactory,
@@ -597,7 +604,7 @@ class _MobileBottomNavigationItem extends StatelessWidget {
                   fontSize: selected ? 12.3 : 12,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 ),
-                child: Text(item.label),
+                child: Text(context.tr(item.label)),
               ),
             ],
           ),
@@ -779,7 +786,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                                 horizontal: 12,
                               ),
                               child: Text(
-                                '我的音乐',
+                                context.tr('我的音乐'),
                                 style: TextStyle(
                                   color: mutedForeground,
                                   fontSize: 12,
@@ -793,7 +800,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.home_rounded,
-                              label: '首页',
+                              label: context.tr('首页'),
                               selected: selectedIndex == 0,
                               onTap: () => onSelected(0),
                             ),
@@ -801,7 +808,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.library_music_rounded,
-                              label: '本地曲库',
+                              label: context.tr('本地曲库'),
                               selected:
                                   selectedIndex == 1 &&
                                   libraryFilter == LibraryFilter.all,
@@ -811,7 +818,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.queue_music_rounded,
-                              label: '我的歌单',
+                              label: context.tr('我的歌单'),
                               selected: selectedIndex == 2,
                               onTap: () => onSelected(2),
                             ),
@@ -820,7 +827,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               lightForeground: useLightForeground,
                               icon: Icons.favorite_rounded,
                               label:
-                                  '我的收藏 · ${library.tracks.where((item) => item.isFavorite).length}',
+                                  '${context.tr('我的收藏')} · ${library.tracks.where((item) => item.isFavorite).length}',
                               selected:
                                   selectedIndex == 1 &&
                                   libraryFilter == LibraryFilter.favorites,
@@ -830,7 +837,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.history_rounded,
-                              label: '最近播放',
+                              label: context.tr('最近播放'),
                               selected:
                                   selectedIndex == 1 &&
                                   libraryFilter == LibraryFilter.recent,
@@ -840,7 +847,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.ondemand_video_rounded,
-                              label: 'MV 专区',
+                              label: context.tr('MV 专区'),
                               selected:
                                   selectedIndex == 1 &&
                                   libraryFilter == LibraryFilter.videos,
@@ -850,7 +857,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                               accent: appearance.accent,
                               lightForeground: useLightForeground,
                               icon: Icons.leaderboard_rounded,
-                              label: '听歌排行',
+                              label: context.tr('听歌排行'),
                               selected: selectedIndex == 4,
                               onTap: onRankings,
                             ),
@@ -862,7 +869,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        '常用歌单',
+                                        context.tr('常用歌单'),
                                         style: TextStyle(
                                           color: mutedForeground,
                                           fontSize: 12,
@@ -871,7 +878,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                                       ),
                                     ),
                                     IconButton(
-                                      tooltip: '选择常用歌单',
+                                      tooltip: context.tr('选择常用歌单'),
                                       onPressed: onConfigurePlaylists,
                                       icon: const Icon(
                                         Icons.tune_rounded,
@@ -879,7 +886,9 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                                       ),
                                     ),
                                     IconButton(
-                                      tooltip: playlistsExpanded ? '折叠' : '展开',
+                                      tooltip: context.tr(
+                                        playlistsExpanded ? '折叠' : '展开',
+                                      ),
                                       onPressed: onTogglePlaylists,
                                       icon: Icon(
                                         playlistsExpanded
@@ -925,7 +934,7 @@ class _DesktopSidebarState extends ConsumerState<_DesktopSidebar> {
                   accent: appearance.accent,
                   lightForeground: useLightForeground,
                   icon: Icons.settings_rounded,
-                  label: '设置',
+                  label: context.tr('设置'),
                   selected: selectedIndex == 3,
                   onTap: () => onSelected(3),
                 ),
