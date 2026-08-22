@@ -112,13 +112,12 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final desktop = constraints.maxWidth >= 760;
-              final compactShell = MediaQuery.sizeOf(context).width < 920;
               return Padding(
                 padding: EdgeInsets.fromLTRB(
                   desktop ? 30 : 18,
                   desktop ? 24 : 16,
                   desktop ? 30 : 18,
-                  compactShell ? 8 : 0,
+                  0,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
