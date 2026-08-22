@@ -25,30 +25,44 @@ void main() {
     expect(tester.getSize(find.byKey(childKey)).height, 528);
   });
 
-  testWidgets('mobile list surface fills space around complete rows', (
+  testWidgets('mobile list keeps an 8px gap above the compact player', (
     tester,
   ) async {
     const surfaceKey = ValueKey('mobile-list-surface');
     const listKey = ValueKey('mobile-list-viewport');
+    const playerKey = ValueKey('compact-player');
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
           body: SizedBox(
             height: 539,
-            child: Material(
-              key: surfaceKey,
-              child: WholeItemViewport(
-                itemExtent: 72,
-                child: ColoredBox(key: listKey, color: Colors.blue),
-              ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Material(
+                      key: surfaceKey,
+                      child: WholeItemViewport(
+                        itemExtent: 72,
+                        child: ColoredBox(key: listKey, color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(key: playerKey, height: 60),
+              ],
             ),
           ),
         ),
       ),
     );
 
-    expect(tester.getSize(find.byKey(surfaceKey)).height, 539);
-    expect(tester.getSize(find.byKey(listKey)).height, 504);
+    final surfaceRect = tester.getRect(find.byKey(surfaceKey));
+    final playerRect = tester.getRect(find.byKey(playerKey));
+    expect(playerRect.top - surfaceRect.bottom, 8);
+    expect(surfaceRect.height, 471);
+    expect(tester.getSize(find.byKey(listKey)).height, 432);
   });
 
   testWidgets('vinyl layout center is not shifted by the tonearm', (
