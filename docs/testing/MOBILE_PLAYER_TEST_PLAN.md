@@ -5,7 +5,7 @@ smoke test. Run the automated script first, then record the four physical tests
 below for every release candidate.
 
 ```powershell
-.\tool\mobile_player_regression.ps1 -Serial RFCY91CM8EX `
+.\tool\mobile_player_regression.ps1 -Serial <device-serial> `
   -ExpectedVersionName 0.5.0 -ExpectedVersionCode 2080 `
   -ExerciseMediaButtons -ExerciseRotation -ExerciseNotificationPermission
 ```

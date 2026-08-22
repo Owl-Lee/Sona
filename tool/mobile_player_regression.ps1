@@ -11,6 +11,7 @@ a finally block. A JSON report is written under artifacts/mobile-regression.
 [CmdletBinding()]
 param(
   [string]$Serial = '',
+  [string]$AdbPath = '',
   [string]$Package = 'com.sonarvault.sonar_vault',
   [string]$ExpectedVersionName = '',
   [long]$ExpectedVersionCode = 0,
@@ -22,12 +23,22 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $adbCommand = Get-Command adb -ErrorAction SilentlyContinue
-$adb = if ($adbCommand) {
-  $adbCommand.Source
-} elseif (Test-Path -LiteralPath 'E:\Code\Android\platform-tools\adb.exe') {
-  'E:\Code\Android\platform-tools\adb.exe'
-} else {
-  throw 'ADB was not found.'
+$adbCandidates = @(
+  $AdbPath,
+  $(if ($adbCommand) { $adbCommand.Source }),
+  $(if ($env:ANDROID_SDK_ROOT) {
+      Join-Path $env:ANDROID_SDK_ROOT 'platform-tools\adb.exe'
+    }),
+  $(if ($env:ANDROID_HOME) {
+      Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
+    }),
+  $(if ($env:LOCALAPPDATA) {
+      Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
+    })
+) | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) }
+$adb = $adbCandidates | Select-Object -First 1
+if (-not $adb) {
+  throw 'ADB was not found. Add adb to PATH or pass -AdbPath.'
 }
 
 function Invoke-Adb {
