@@ -2,17 +2,26 @@
 
 [English](#english) · [简体中文](#简体中文)
 
-> 本地优先、离线可用的私人音乐播放器。Local-first, offline-ready music for Windows and Android.
+> Local-first, offline-ready music for Windows and Android. 本地优先、离线可用的私人音乐播放器。
 
-[产品官网 / Website](https://owl-lee.github.io/Sona-Player/) · [下载 / Download](https://github.com/Owl-Lee/Sona-Player/releases/latest) · [问题反馈 / Issues](https://github.com/Owl-Lee/Sona-Player/issues)
+[Website / 产品官网](https://sona.yanbaoli.me/) · [Download / 下载](https://github.com/Owl-Lee/Sona-Player/releases/latest) · [Issues / 问题反馈](https://github.com/Owl-Lee/Sona-Player/issues)
 
-![Sona 沉浸式播放页](docs/site/assets/screenshots/player.png)
+![Sona immersive player / Sona 沉浸式播放页](docs/site/assets/screenshots/player-en.png)
 
 ## English
 
 Sona is a local-first, offline-ready music player for Windows and Android. It is not an online catalog: it helps you import, organize and play music and MVs you already own, with liquid-glass surfaces, an immersive vinyl player and expressive themes.
 
-> The current release is the `0.4.50` public preview. Windows is distributed as a 64-bit portable package and Android as an APK. The Android build currently uses a development signature; download it only from the official website or GitHub Releases.
+> The current release is the `0.5.0` public preview. Windows is distributed as a 64-bit installer and portable package, and Android as an APK. Download Sona only from the official website or GitHub Releases.
+
+[Download Windows x64 installer](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Windows-x64-Setup.exe) · [Download Windows x64 portable ZIP](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Windows-x64.zip) · [Download Android APK](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Android.apk)
+
+### Important upgrade and signing notes
+
+- **Official Sona releases have used the permanent Android signing identity since 0.4.51.** The official `0.5.0` APK updates official `0.4.51` installations in place. Android cannot install it over the `0.4.50` development-signed APK or another differently signed build; preserve your media and needed cloud data, then uninstall that differently signed build once before installing `0.5.0`.
+- Uninstalling the old Android app removes its app-private database and settings. Music and video stored in normal shared folders on the device are not deleted by uninstalling Sona.
+- From `0.5.0` onward, Sona includes complete library backup and restore. Keep a backup before future migrations or major library changes.
+- **Windows packages are not Authenticode-signed yet.** Microsoft Defender SmartScreen may show an **Unknown publisher** warning. Verify that the download came from this repository before running it.
 
 ### Highlights
 
@@ -24,6 +33,10 @@ Sona is a local-first, offline-ready music player for Windows and Android. It is
 - Simplified Chinese, Traditional Chinese and English interfaces.
 - Optional cloud account and sync foundations without making local playback depend on the network.
 - Smart metadata cleanup through tags, filename parsing and MusicBrainz, with true Chromaprint / AcoustID fingerprint matching on Windows.
+- A 30-day cloud recycle bin with restore, immediate undo, and explicit owner-only permanent deletion.
+- Complete manual library backup and cold-start restore, plus lightweight automatic recovery snapshots.
+- Manual title, artist, album, and artwork editing with per-track identification/edit history and safe undo.
+- Full effects, energy saver, and motion-off performance modes for different devices.
 
 ### Technology
 
@@ -62,13 +75,28 @@ Windows development requires Developer Mode so Flutter plugins can create symbol
 - [Keyboard avoidance and transition guidelines](docs/design/Sona键盘避让与柔和过渡动效规范.md)
 - [Historical technical log](docs/history/Sona-Claude%20技术日志.md)
 
+### Versioning and backup conventions
+
+- Completed feature batches should be committed and pushed to GitHub.
+- Deliverable builds use a Git tag and GitHub Release; release artifacts belong in the Release and not in the tracked `build/` directory.
+- Private keys, server secrets, database passwords and local media must never be committed. A client-side publishable key is not a server secret.
+
 ---
 
 ## 简体中文
 
 Sona 不是在线曲库服务：它帮助你导入、整理和播放自己拥有的音乐与 MV，并以液态玻璃、黑胶播放页和可切换皮肤提供沉浸式桌面体验。
 
-> 当前发布的是 `0.4.50` 公开预览版。Windows 提供 64 位便携包，Android 提供 APK；Android 包目前使用开发签名，请只从官网或 GitHub Release 下载。
+> 当前发布的是 `0.5.0` 公开预览版。Windows 提供 64 位安装器和便携包，Android 提供 APK；请只从官网或 GitHub Release 下载 Sona。
+
+[下载 Windows x64 安装器](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Windows-x64-Setup.exe) · [下载 Windows x64 便携版 ZIP](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Windows-x64.zip) · [下载 Android APK](https://github.com/Owl-Lee/Sona-Player/releases/latest/download/Sona-Android.apk)
+
+## 重要升级与签名说明
+
+- **Sona 官方版本从 0.4.51 起使用永久 Android 签名。** 官方 `0.5.0` APK 可以直接覆盖官方 `0.4.51`。Android 无法把它覆盖到 `0.4.50` 开发签名版或其他不同签名版本上；请先保留原始媒体并同步需要保留的云端资料，再卸载一次不同签名的旧版，然后安装 `0.5.0`。
+- 卸载旧版 Android 应用会清除应用私有目录里的曲库数据库和设置；保存在手机普通共享目录中的音乐和视频不会因为卸载 Sona 而被删除。
+- 从 `0.5.0` 起，Sona 提供完整曲库备份与恢复。以后迁移版本或大规模整理曲库前，请先创建备份。
+- **Windows 安装包目前没有 Authenticode 代码签名。** Microsoft Defender SmartScreen 可能显示 **Unknown publisher（未知发布者）**，运行前请确认文件来自本仓库。
 
 ## 当前能力
 
@@ -80,6 +108,10 @@ Sona 不是在线曲库服务：它帮助你导入、整理和播放自己拥有
 - 简体中文、繁體中文和 English 界面切换。
 - 云账号和同步基础设施；断网时仍以本地曲库为主，不依赖云端才能播放。
 - 歌曲信息智能校准：先清洗标签和文件名，再查询 MusicBrainz；Windows 可通过 Chromaprint/AcoustID 进行真正的音频声纹匹配。
+- 云端歌曲进入保留 30 天的回收站，支持恢复、刚删除后的撤销，以及仅所有者可执行的永久删除。
+- 手动导出完整曲库备份并在冷启动恢复，同时保留不重复复制歌曲与 MV 的轻量自动恢复快照。
+- 手动编辑歌名、歌手、专辑和封面；逐曲保存识别/编辑历史并提供安全撤销。
+- 完整特效、节能特效和关闭动态特效三个性能档位，适配不同设备。
 
 ## 技术架构
 
