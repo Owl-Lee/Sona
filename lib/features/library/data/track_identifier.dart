@@ -289,7 +289,7 @@ class TrackIdentifier {
           .timeout(const Duration(seconds: 8));
       request.headers.set(
         HttpHeaders.userAgentHeader,
-        'Sona/0.4.50 (https://github.com/Owl-Lee/Sona)',
+        'Sona/0.4.51 (https://github.com/Owl-Lee/Sona-Player)',
       );
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       final response = await request.close().timeout(
