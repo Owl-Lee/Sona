@@ -21,8 +21,8 @@ All GitHub Actions and the actionlint container are pinned to immutable commit
 SHAs or an image digest; updates must be reviewed and intentional.
 
 The only public release target is `Owl-Lee/Sona-Player`. The workflow refuses
-to publish from the private `Owl-Lee/Sona` repository, because assets released
-there would not be anonymously downloadable. Configure secrets and create the
+to publish from a private development mirror, because assets released there
+would not be anonymously downloadable. Configure secrets and create the
 release tag in the public repository only.
 
 ## Required GitHub Actions secrets
@@ -99,9 +99,9 @@ Windows ZIP，以及标签、Flutter 版本和安装器版本不一致。
 GitHub Actions 与 actionlint 容器均固定到不可变提交 SHA 或镜像摘要；升级
 依赖时必须人工审查后再更新。
 
-唯一正式公开发布仓库是 `Owl-Lee/Sona-Player`。工作流会拒绝从私有仓库
-`Owl-Lee/Sona` 发布，否则安装包无法被陌生用户匿名下载。只在公开仓库配置
-Secrets 并创建正式版本标签。
+唯一正式公开发布仓库是 `Owl-Lee/Sona-Player`。工作流会拒绝从私有开发镜像
+发布，否则安装包无法被陌生用户匿名下载。只在公开仓库配置 Secrets 并创建
+正式版本标签。
 
 ### GitHub Secrets 与永久签名
 
