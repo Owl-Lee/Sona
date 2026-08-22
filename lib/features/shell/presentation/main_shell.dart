@@ -237,6 +237,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                           children: _pages,
                         ),
                       ),
+                      // Keep a real strip of wallpaper between page surfaces
+                      // and the compact player. Putting this spacing inside an
+                      // individual page lets rounded translucent cards visually
+                      // consume it, while a shell-level gap stays consistent on
+                      // every mobile destination.
+                      const SizedBox(height: 8),
                       const NowPlayingBar(compact: true),
                       _MobileBottomNavigation(
                         selectedIndex: selectedIndex > 3 ? 0 : selectedIndex,

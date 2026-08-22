@@ -25,7 +25,7 @@ void main() {
     expect(tester.getSize(find.byKey(childKey)).height, 528);
   });
 
-  testWidgets('mobile list keeps an 8px gap above the compact player', (
+  testWidgets('mobile shell keeps an 8px gap above the compact player', (
     tester,
   ) async {
     const surfaceKey = ValueKey('mobile-list-surface');
@@ -39,17 +39,15 @@ void main() {
             child: Column(
               children: [
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Material(
-                      key: surfaceKey,
-                      child: WholeItemViewport(
-                        itemExtent: 72,
-                        child: ColoredBox(key: listKey, color: Colors.blue),
-                      ),
+                  child: Material(
+                    key: surfaceKey,
+                    child: WholeItemViewport(
+                      itemExtent: 72,
+                      child: ColoredBox(key: listKey, color: Colors.blue),
                     ),
                   ),
                 ),
+                SizedBox(height: 8),
                 SizedBox(key: playerKey, height: 60),
               ],
             ),
