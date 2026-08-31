@@ -14,6 +14,7 @@ import '../../library/data/library_database.dart';
 import '../../library/domain/track.dart';
 import '../../library/domain/track_identification.dart';
 import '../domain/cloud_file_cache.dart';
+import '../domain/cloud_library_mirror_plan.dart';
 import '../domain/cloud_recycle_policy.dart';
 import '../domain/cloud_storage_delete_outbox.dart';
 
@@ -652,6 +653,213 @@ class CloudSyncController extends StateNotifier<CloudSyncState> {
       return false;
     }
   }
+
+  /// Plans a one-way mirror without mutating either side. Ordinary sync stays
+  /// bidirectional; this explicit operation makes the active cloud library
+  /// match the current device while retaining removed cloud tracks in the
+  /// 30-day recycle bin.
+  Future<CloudLibraryMirrorPlan?> previewLocalLibraryMirror(
+    LibraryState library,
+  ) async {
+    final client = _client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      state = state.copyWith(error: 'cloud_sign_in_required');
+      return null;
+    }
+    state = state.copyWith(
+      syncing: true,
+      status: 'cloud_mirror_planning',
+      summary: '',
+      error: '',
+      offline: false,
+    );
+    try {
+      await _initialMaintenance;
+      await _drainStorageDeleteOutbox(client);
+      final spaceId = await _spaceId(client, user.id);
+      final rows = _rows(
+        await _withCloudTimeout(
+          client
+              .from('cloud_tracks')
+              .select('content_hash,deleted_at')
+              .eq('space_id', spaceId),
+        ),
+      );
+      final plan = _mirrorPlan(library, rows);
+      state = state.copyWith(
+        syncing: false,
+        status: '',
+        summary: 'cloud_mirror_preview',
+        summaryArgs: _mirrorPlanArguments(plan),
+      );
+      return plan;
+    } catch (error) {
+      state = state.copyWith(
+        syncing: false,
+        status: '',
+        error: _friendlyError(error),
+        offline: _isOfflineFailure(error),
+      );
+      return null;
+    }
+  }
+
+  Future<bool> mirrorLocalLibraryToCloud(LibraryState library) =>
+      _destructiveTasks.run(() => _mirrorLocalLibraryToCloud(library));
+
+  Future<bool> _mirrorLocalLibraryToCloud(LibraryState library) async {
+    final client = _client;
+    final user = client?.auth.currentUser;
+    if (client == null || user == null) {
+      state = state.copyWith(error: 'cloud_sign_in_required');
+      return false;
+    }
+    state = state.copyWith(
+      syncing: true,
+      progress: 0,
+      status: 'cloud_mirror_planning',
+      summary: '',
+      error: '',
+      offline: false,
+    );
+    try {
+      await _initialMaintenance;
+      await _drainStorageDeleteOutbox(client);
+      final spaceId = await _spaceId(client, user.id);
+      final rows = _rows(
+        await _withCloudTimeout(
+          client.from('cloud_tracks').select().eq('space_id', spaceId),
+        ),
+      );
+      final plan = _mirrorPlan(library, rows);
+      final activeByHash = <String, Map<String, dynamic>>{
+        for (final row in activeCloudTrackRows(rows))
+          row['content_hash'] as String: row,
+      };
+      final recycledByHash = <String, Map<String, dynamic>>{
+        for (final row in recycledCloudTrackRows(rows))
+          row['content_hash'] as String: row,
+      };
+      final excluded = await _excludedCloudHashes();
+      var completed = 0;
+      final preparatoryActions = plan.recycleCount + plan.restoreCount;
+
+      for (final hash in plan.recycleHashes) {
+        final row = activeByHash[hash];
+        if (row == null) continue;
+        final id = row['id'] as String;
+        final changedAt = DateTime.now().toUtc().toIso8601String();
+        final updated = _rows(
+          await _withCloudTimeout(
+            client
+                .from('cloud_tracks')
+                .update({'deleted_at': changedAt, 'updated_at': changedAt})
+                .eq('id', id)
+                .eq('space_id', spaceId)
+                .select('id'),
+          ),
+        );
+        if (!cloudMutationAffectedTrack(updated, id)) {
+          throw StateError('cloud_mirror_recycle_not_applied');
+        }
+        excluded.add(hash);
+        completed += 1;
+        state = state.copyWith(
+          progress: preparatoryActions == 0
+              ? .15
+              : .05 + .2 * completed / preparatoryActions,
+          status: 'cloud_mirror_recycling',
+        );
+      }
+
+      for (final hash in plan.restoreHashes) {
+        final row = recycledByHash[hash];
+        if (row == null) continue;
+        final id = row['id'] as String;
+        final changedAt = DateTime.now().toUtc().toIso8601String();
+        final updated = _rows(
+          await _withCloudTimeout(
+            client
+                .from('cloud_tracks')
+                .update({'deleted_at': null, 'updated_at': changedAt})
+                .eq('id', id)
+                .eq('space_id', spaceId)
+                .select('id'),
+          ),
+        );
+        if (!cloudMutationAffectedTrack(updated, id)) {
+          throw StateError('cloud_mirror_restore_not_applied');
+        }
+        excluded.remove(hash);
+        await _discardStorageDeletes(
+          userId: user.id,
+          objects: [
+            row['media_object_path'] as String?,
+            row['video_object_path'] as String?,
+          ],
+        );
+        completed += 1;
+        state = state.copyWith(
+          progress: preparatoryActions == 0
+              ? .25
+              : .05 + .2 * completed / preparatoryActions,
+          status: 'cloud_mirror_restoring',
+        );
+      }
+      // A single settings write keeps retry behaviour deterministic if the
+      // network drops halfway through the mirror. Both server mutations are
+      // idempotent and can be safely retried from a fresh preview.
+      await _saveExcludedCloudHashes(excluded);
+
+      final synced = await sync(library);
+      if (!synced) return false;
+      state = state.copyWith(
+        summary: 'cloud_mirror_complete',
+        summaryArgs: _mirrorPlanArguments(plan),
+        error: '',
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        syncing: false,
+        status: 'cloud_sync_interrupted',
+        error: _friendlyError(error),
+        offline: _isOfflineFailure(error),
+      );
+      return false;
+    }
+  }
+
+  CloudLibraryMirrorPlan _mirrorPlan(
+    LibraryState library,
+    Iterable<Map<String, dynamic>> remoteRows,
+  ) {
+    final localHashes = library.tracks
+        .map((track) => track.contentHash)
+        .toSet();
+    return planCloudLibraryMirror(
+      localHashes: localHashes,
+      activeCloudHashes: activeCloudTrackRows(remoteRows)
+          .map((row) => row['content_hash'] as String)
+          .toSet(),
+      recycledCloudHashes: recycledCloudTrackRows(remoteRows)
+          .map((row) => row['content_hash'] as String)
+          .toSet(),
+      tooLargeLocalHashes: library.tracks
+          .where((track) => track.fileSize > _freeProjectFileLimit)
+          .map((track) => track.contentHash)
+          .toSet(),
+    );
+  }
+
+  Map<String, String> _mirrorPlanArguments(CloudLibraryMirrorPlan plan) => {
+    'upload': '${plan.uploadCount}',
+    'restore': '${plan.restoreCount}',
+    'recycle': '${plan.recycleCount}',
+    'unchanged': '${plan.unchangedCount}',
+    'tooLarge': '${plan.tooLargeCount}',
+  };
 
   Future<bool> sync(LibraryState library) async {
     final client = _client;

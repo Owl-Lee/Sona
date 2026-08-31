@@ -1289,10 +1289,38 @@ class _StoragePanelState extends ConsumerState<_StoragePanel> {
                 icon: const Icon(Icons.history_rounded, size: 19),
                 label: Text(context.tr('恢复当前设备快照')),
               ),
-              IconButton.filledTonal(
+              IconButton.outlined(
                 tooltip: context.tr('刷新自动备份状态'),
                 onPressed: _backupBusy ? null : _refreshAutomaticBackups,
                 icon: const Icon(Icons.refresh_rounded),
+                style:
+                    IconButton.styleFrom(
+                      minimumSize: const Size.square(42),
+                      backgroundColor: Colors.white.withValues(alpha: 0.54),
+                      foregroundColor: AppColors.ink,
+                      disabledBackgroundColor: Colors.white.withValues(
+                        alpha: 0.24,
+                      ),
+                      disabledForegroundColor: AppColors.textSecondary
+                          .withValues(alpha: 0.58),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        width: 1.1,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                    ).copyWith(
+                      overlayColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.pressed)) {
+                          return AppColors.accent.withValues(alpha: 0.18);
+                        }
+                        if (states.contains(WidgetState.hovered)) {
+                          return AppColors.accent.withValues(alpha: 0.10);
+                        }
+                        return null;
+                      }),
+                    ),
               ),
             ],
           ),

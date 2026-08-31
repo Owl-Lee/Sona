@@ -1030,3 +1030,20 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 - Windows now uses a hidden native title bar and an in-app top frame with draggable caption area plus minimize, maximize/restore, and close controls.
 - Restored the MV seek timeline: it is now visible across the top edge of the bottom control panel while keeping the elapsed and total time labels.
+
+## 2026-08-24 补充：本机覆盖云端
+
+- 账号与云同步页新增“以本机覆盖云端”。这是显式触发的单向镜像，不改变“立即同步”的双向语义。
+- 镜像以 `content_hash` 为身份：本机新增项上传，云端回收项按需恢复，云端多余活动项进入 30 天回收站；既有且与本机无关的回收站记录保持原样。
+- UI 必须先调用 `previewLocalLibraryMirror` 展示差异，再由用户确认调用 `mirrorLocalLibraryToCloud`。不要绕过预览，也不要把它改成默认同步策略。
+- 当前单文件云上传上限仍为 50 MB；预览会单独显示无法完整上传媒体的新增项目，后续若调整云存储策略需同步修改该警告和测试。
+
+## 2026-08-31 补充：0.5.0 后首批改动收口
+
+- 本机覆盖云端已完成桌面端与手机端共用入口、只读差异预览、二次确认和安全执行；普通“立即同步”继续保持双向语义。
+- 设置页动态特效三张卡片在桌面宽屏下统一等高，窄屏继续纵向排列；不同语言的说明文字不会再让卡片边框参差。
+- 完整备份区域的刷新按钮由主题色实心圆改成浅色半透明玻璃按钮，保留悬停和按压反馈，与相邻恢复按钮保持一致。
+- 云端单条和批量移入回收站后的“撤销”提示不再永久驻留：单条 6 秒、批量 8 秒自动收起，新提示仍立即替换旧提示。
+- 完整验证：`flutter analyze --no-pub` 无问题，`flutter test --no-pub` 126 项全部通过。Windows Release 已在实现阶段成功重建并启动。
+- 2026-08-31 的本机 Android Release 门禁被系统 Java/Gradle 回环管道异常 `Unable to establish loopback connection` 阻断；Android Studio JDK 25 与官方 Temurin JDK 21 均可复现。未发现 Dart/Flutter 编译错误，但下一公开版本发布前仍必须在 CI 或恢复正常的 Android 构建环境中重新完成 APK 门禁。
+- 本批次只做开发提交，不提升 `0.5.0+2080` 版本号，也不替换公开 `v0.5.0` 安装包；下一版本范围确认后再统一升级版本并发布。

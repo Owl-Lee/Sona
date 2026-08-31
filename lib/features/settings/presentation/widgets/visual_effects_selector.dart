@@ -56,30 +56,42 @@ class VisualEffectsSelector extends ConsumerWidget {
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth >= 680
-            ? (constraints.maxWidth - 20) / 3
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
+        Widget choice(VisualEffectsMode mode) => _EffectsChoice(
+          mode: mode,
+          selected: selected == mode,
+          accent: accent,
+          title: labels.title(mode),
+          description: labels.description(mode),
+          onTap: () async {
+            await ref
+                .read(appearanceControllerProvider.notifier)
+                .setEffectsMode(mode);
+            onChanged?.call(mode);
+          },
+        );
+        if (constraints.maxWidth >= 680) {
+          // Stretch all three desktop cards to the height of the longest
+          // localized description. This keeps their glass frames aligned
+          // without clipping English/Traditional Chinese copy.
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final mode in VisualEffectsMode.values) ...[
+                  if (mode != VisualEffectsMode.full) const SizedBox(width: 10),
+                  Expanded(child: choice(mode)),
+                ],
+              ],
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final mode in VisualEffectsMode.values)
-              SizedBox(
-                width: cardWidth,
-                child: _EffectsChoice(
-                  mode: mode,
-                  selected: selected == mode,
-                  accent: accent,
-                  title: labels.title(mode),
-                  description: labels.description(mode),
-                  onTap: () async {
-                    await ref
-                        .read(appearanceControllerProvider.notifier)
-                        .setEffectsMode(mode);
-                    onChanged?.call(mode);
-                  },
-                ),
-              ),
+            for (final mode in VisualEffectsMode.values) ...[
+              if (mode != VisualEffectsMode.full) const SizedBox(height: 10),
+              choice(mode),
+            ],
           ],
         );
       },

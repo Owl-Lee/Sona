@@ -144,6 +144,13 @@ class AccountSyncCard extends ConsumerWidget {
                 icon: const Icon(Icons.sync_rounded),
                 label: Text(context.tr(sync.syncing ? '同步中' : '立即同步')),
               ),
+              OutlinedButton.icon(
+                onPressed: sync.syncing
+                    ? null
+                    : () => _mirrorLocalLibrary(context, ref, library),
+                icon: const Icon(Icons.cloud_upload_outlined),
+                label: Text(context.tr('以本机覆盖云端')),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -215,6 +222,13 @@ class AccountSyncCard extends ConsumerWidget {
                 label: Text(context.tr(sync.syncing ? '同步中' : '立即同步')),
               ),
               OutlinedButton.icon(
+                onPressed: sync.syncing
+                    ? null
+                    : () => _mirrorLocalLibrary(context, ref, library),
+                icon: const Icon(Icons.cloud_upload_outlined),
+                label: Text(context.tr('以本机覆盖云端')),
+              ),
+              OutlinedButton.icon(
                 onPressed: account.loading || sync.syncing
                     ? null
                     : () => _pickAndUploadAvatar(context, controller),
@@ -257,6 +271,79 @@ class AccountSyncCard extends ConsumerWidget {
     );
     if (cropped == null) return;
     await controller.uploadAvatar(cropped);
+  }
+
+  Future<void> _mirrorLocalLibrary(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryState library,
+  ) async {
+    final controller = ref.read(cloudSyncControllerProvider.notifier);
+    final plan = await controller.previewLocalLibraryMirror(library);
+    if (plan == null || !context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.cloud_upload_outlined),
+        title: Text(context.tr('以本机曲库覆盖云端？')),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 470),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.tr('这是一次单向镜像。完成后，云端活动曲库会与这台设备的本机曲库一致；普通“立即同步”仍保持双向同步。'),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                context
+                    .tr(
+                      '将上传 {upload} 首、从回收站恢复 {restore} 首、移入回收站 {recycle} 首，保持不变 {unchanged} 首。',
+                    )
+                    .replaceAll('{upload}', '${plan.uploadCount}')
+                    .replaceAll('{restore}', '${plan.restoreCount}')
+                    .replaceAll('{recycle}', '${plan.recycleCount}')
+                    .replaceAll('{unchanged}', '${plan.unchangedCount}'),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              if (plan.recycleCount > 0) ...[
+                const SizedBox(height: 12),
+                Text(context.tr('云端多出的歌曲只会移入 30 天回收站，本机文件不会删除。')),
+              ],
+              if (plan.tooLargeCount > 0) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context
+                      .tr('有 {count} 首新增歌曲超过 50 MB，受当前云端文件限制影响，无法完整上传媒体文件。')
+                      .replaceAll('{count}', '${plan.tooLargeCount}'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr('取消')),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.cloud_upload_rounded),
+            label: Text(context.tr('开始覆盖')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final success = await controller.mirrorLocalLibraryToCloud(library);
+    if (!success || !context.mounted) return;
+    await ref.read(libraryControllerProvider.notifier).load();
+    await controller.loadCloudTracks();
   }
 
   Future<void> _showAuthDialog(
@@ -583,6 +670,10 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
         context,
         SnackBar(
           duration: const Duration(seconds: 6),
+          // Flutter keeps snack bars with actions visible indefinitely by
+          // default. Undo remains available during this window, but the
+          // transient message must still clear itself afterwards.
+          persist: false,
           content: Text(
             context
                 .tr('已将“{title}”移入云端回收站。')
@@ -747,6 +838,7 @@ class _CloudLibraryPanelState extends ConsumerState<_CloudLibraryPanel> {
       context,
       SnackBar(
         duration: const Duration(seconds: 8),
+        persist: false,
         content: Text(
           failedIds.isEmpty
               ? context
