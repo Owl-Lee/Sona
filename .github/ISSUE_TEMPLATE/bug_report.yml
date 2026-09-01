@@ -1,0 +1,61 @@
+name: Bug report / 缺陷报告
+description: Report a reproducible Sona problem. 报告可复现的 Sona 问题。
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve Sona. Please remove personal music, account data, paths, and credentials from screenshots or logs.
+
+        感谢帮助改进 Sona。截图与日志中请移除私人音乐、账号资料、本机路径和凭据。
+  - type: input
+    id: version
+    attributes:
+      label: Sona version / Sona 版本
+      placeholder: "0.5.0+2080"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform / 平台
+      options:
+        - Windows 10
+        - Windows 11
+        - Android
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem / 问题说明
+      description: What happened, and what did you expect? 实际发生了什么，预期是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps / 复现步骤
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional context / 补充信息
+      description: Add sanitized logs, screenshots, media type, and whether the issue survives a restart. 可附脱敏日志、截图、媒体类型，以及重启后是否仍存在。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist / 检查项
+      options:
+        - label: I searched existing issues. / 我已搜索现有 Issue。
+          required: true
+        - label: I removed private data and secrets. / 我已移除隐私数据和密钥。
+          required: true

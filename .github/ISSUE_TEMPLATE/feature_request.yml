@@ -1,0 +1,42 @@
+name: Feature request / 功能建议
+description: Propose a focused improvement to Sona. 提出范围清晰的改进建议。
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem first, then the proposed behavior. Large playback, database, cloud, or UI changes should include tradeoffs.
+
+        请先说明用户问题，再描述期望行为。大型播放、数据库、云端或 UI 改动请补充取舍。
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem / 用户问题
+      description: What is difficult or impossible today? 目前什么事情难以完成？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior / 期望行为
+      description: Describe the smallest useful solution. 描述最小但有价值的解决方案。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and tradeoffs / 替代方案与取舍
+      description: What else did you consider? 是否考虑过其他实现？
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Platform scope / 平台范围
+      options:
+        - Windows and Android / 双端
+        - Windows only / 仅 Windows
+        - Android only / 仅 Android
+        - Documentation or website / 文档或网站
+    validations:
+      required: true

@@ -128,7 +128,11 @@ $requiredCommunityFiles = @(
     'CODE_OF_CONDUCT.md',
     'THIRD_PARTY_NOTICES.md',
     'ASSET_PROVENANCE.md',
-    '.env.example'
+    '.env.example',
+    '.github/ISSUE_TEMPLATE/bug_report.yml',
+    '.github/ISSUE_TEMPLATE/feature_request.yml',
+    '.github/ISSUE_TEMPLATE/config.yml',
+    '.github/pull_request_template.md'
 )
 foreach ($relativePath in $requiredCommunityFiles) {
     Assert-True ($candidateFiles -contains $relativePath) "Missing open-source governance file: $relativePath"

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability / 安全漏洞
+    url: https://github.com/Owl-Lee/Sona/security/advisories/new
+    about: Report unpatched vulnerabilities privately. 未修复漏洞请通过私密入口报告。
+  - name: Documentation / 项目文档
+    url: https://github.com/Owl-Lee/Sona/blob/main/docs/README.md
+    about: Read architecture, testing, and release documentation. 查阅架构、测试与发布文档。
