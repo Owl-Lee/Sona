@@ -119,14 +119,47 @@ foreach ($workflowPath in $workflowPaths) {
     }
 }
 
-$candidateFiles = @(& git -C $root ls-files --cached --others --exclude-standard)
+$candidateFiles = @(& git -C $root -c core.quotepath=false ls-files --cached --others --exclude-standard)
 Assert-True ($LASTEXITCODE -eq 0) 'Unable to enumerate repository files with git.'
+$requiredCommunityFiles = @(
+    'LICENSE',
+    'CONTRIBUTING.md',
+    'SECURITY.md',
+    'CODE_OF_CONDUCT.md',
+    'THIRD_PARTY_NOTICES.md',
+    'ASSET_PROVENANCE.md',
+    '.env.example'
+)
+foreach ($relativePath in $requiredCommunityFiles) {
+    Assert-True ($candidateFiles -contains $relativePath) "Missing open-source governance file: $relativePath"
+}
+
 $credentialPattern = '(?i)(^|/)(key\.properties|\.env(?:\.[^/]+)?|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(jks|keystore|p12|pfx|pem|private-key))$'
 $trackedCredentials = @($candidateFiles | Where-Object {
     $normalized = $_ -replace '\\', '/'
     $normalized -match $credentialPattern -and $normalized -notmatch '(?i)\.env\.example$'
 })
 Assert-True ($trackedCredentials.Count -eq 0) "Credential-like files are present in the source set: $($trackedCredentials -join ', ')"
+
+$historicalUser = 'Reboot' + 'Base'
+$historicalAccount = 'yan' + '666'
+$identityLeakPattern = '(?i)(C:\\Users\\' + [regex]::Escape($historicalUser) + '|/Users/' + [regex]::Escape($historicalUser) + '|' + [regex]::Escape($historicalAccount) + ')'
+$identityLeaks = New-Object System.Collections.Generic.List[string]
+foreach ($relativePath in $candidateFiles) {
+    $absolutePath = Join-Path $root $relativePath
+    if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) {
+        continue
+    }
+    $extension = [System.IO.Path]::GetExtension($absolutePath).ToLowerInvariant()
+    if ($extension -notin @('.md', '.txt', '.yaml', '.yml', '.json', '.toml', '.dart', '.ps1', '.iss', '.properties', '.xml', '.html', '.css', '.js')) {
+        continue
+    }
+    $content = Get-Content -LiteralPath $absolutePath -Raw -ErrorAction SilentlyContinue
+    if ($null -ne $content -and [regex]::IsMatch($content, $identityLeakPattern)) {
+        $identityLeaks.Add($relativePath)
+    }
+}
+Assert-True ($identityLeaks.Count -eq 0) "Personal workstation identity appears in source files: $($identityLeaks -join ', ')"
 
 if (-not [string]::IsNullOrWhiteSpace($WindowsBuildDirectory)) {
     $windowsBuild = Resolve-ExistingDirectory $WindowsBuildDirectory 'Windows build directory'

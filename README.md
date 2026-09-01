@@ -2,9 +2,12 @@
 
 [English](#english) · [简体中文](#简体中文)
 
+[![CI](https://github.com/Owl-Lee/Sona/actions/workflows/ci.yml/badge.svg)](https://github.com/Owl-Lee/Sona/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-6f42c1.svg)](LICENSE)
+
 > Local-first, offline-ready music for Windows and Android. 本地优先、离线可用的私人音乐播放器。
 
-[Website / 产品官网](https://sona.yanbaoli.me/) · [Download / 下载](https://github.com/Owl-Lee/Sona-Player/releases/latest) · [Issues / 问题反馈](https://github.com/Owl-Lee/Sona-Player/issues)
+[Website / 产品官网](https://sona.yanbaoli.me/) · [Download / 下载](https://github.com/Owl-Lee/Sona-Player/releases/latest) · [Issues / 问题反馈](https://github.com/Owl-Lee/Sona/issues)
 
 ![Sona immersive player / Sona 沉浸式播放页](docs/site/assets/screenshots/player-en.png)
 
@@ -63,17 +66,31 @@ To enable online AcoustID fingerprint lookup, register a free AcoustID applicati
 flutter build windows --release --dart-define=ACOUSTID_API_KEY=YOUR_APPLICATION_KEY
 ```
 
+For repeatable local builds, copy `.env.example` to the ignored `.env.local`,
+fill only the public client configuration you need, then use
+`--dart-define-from-file=.env.local`. Never place server, database, signing, or
+private keys in the client repository.
+
 Without a key, **AI Identify Track Info** still uses local tags, filename cleanup and the free MusicBrainz public database. Candidate metadata is shown for confirmation and does not silently overwrite user data. Chromaprint `fpcalc` and its LGPL 2.1 license are included under `windows/third_party/chromaprint/`.
 
 Windows development requires Developer Mode so Flutter plugins can create symbolic links. Running a built Release package does not require the Flutter SDK.
 
 ### Documentation
 
+- [Documentation index](docs/README.md)
 - [Technical highlights and architecture](docs/architecture/Sona项目技术亮点与讲解.md)
 - [Project handoff](docs/handoff/Sona项目交接文档.md)
 - [Windows continuation handoff (2026-08-18)](docs/handoff/Sona电脑端续开发交接-2026-08-18.md)
 - [Keyboard avoidance and transition guidelines](docs/design/Sona键盘避让与柔和过渡动效规范.md)
 - [Historical technical log](docs/history/Sona-Claude%20技术日志.md)
+
+### Contributing, security and licensing
+
+- [Contributing guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy and private vulnerability reporting](SECURITY.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md) · [Asset provenance](ASSET_PROVENANCE.md)
+- Sona source code is released under the [MIT License](LICENSE). Third-party
+  components and bundled assets keep their own terms as documented above.
 
 ### Versioning and backup conventions
 
@@ -138,19 +155,32 @@ flutter run -d windows
 flutter build windows --release --dart-define=ACOUSTID_API_KEY=你的应用Key
 ```
 
+如需可复现的本地构建，可将 `.env.example` 复制为已被 Git 忽略的
+`.env.local`，只填入确实需要的客户端公开配置，然后使用
+`--dart-define-from-file=.env.local`。服务端密钥、数据库密码、签名私钥和
+其他私密凭据不得写入客户端仓库。
+
 未配置 key 时，“AI 识别歌曲信息”仍会使用本地标签、文件名清洗和免费的 MusicBrainz 公开曲库，不会自动覆盖用户资料；所有候选结果均需用户确认。Chromaprint `fpcalc` 及其 LGPL 2.1 许可证位于 `windows/third_party/chromaprint/`。
 
 Windows 开发环境需要开启开发者模式，以便 Flutter 插件创建符号链接。运行已构建的 Release 程序不需要 Flutter SDK。
 
 ## 文档
 
+- [完整文档索引](docs/README.md)
 - [项目技术亮点与讲解](docs/architecture/Sona项目技术亮点与讲解.md)：产品定位、架构与技术讲解。
 - [项目工程交接文档](docs/handoff/Sona项目交接文档.md)：功能范围、数据/同步边界及后续注意事项。
 - [电脑端续开发交接（2026-08-18）](docs/handoff/Sona电脑端续开发交接-2026-08-18.md)：Windows 当前状态与待验证项。
 - [键盘避让与柔和过渡动效规范](docs/design/Sona键盘避让与柔和过渡动效规范.md)：交互和动效约束。
 - [历史技术日志](docs/history/Sona-Claude 技术日志.md)：早期迭代记录。
 
-历史文档中的绝对路径仅用于记录当时环境；以仓库根目录为当前源码基准。
+历史环境路径已经统一匿名化；以仓库根目录为当前源码基准。
+
+## 参与贡献、安全与许可证
+
+- [贡献指南](CONTRIBUTING.md) · [社区行为准则](CODE_OF_CONDUCT.md)
+- [安全政策与私密漏洞报告方式](SECURITY.md)
+- [第三方组件声明](THIRD_PARTY_NOTICES.md) · [素材来源与授权说明](ASSET_PROVENANCE.md)
+- Sona 源代码采用 [MIT License](LICENSE)；第三方组件和随附素材仍分别遵循上述文档中记录的许可条款。
 
 ## 版本与备份约定
 

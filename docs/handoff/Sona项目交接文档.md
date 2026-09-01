@@ -27,7 +27,7 @@ Sona 是一款离线优先的个人音乐播放器，主要平台为 Windows 和
   - Project Ref：`mtikxsgwhzommksflewe`
   - URL：`https://mtikxsgwhzommksflewe.supabase.co`
   - 使用 Auth、PostgreSQL、Storage。
-- 视觉参考文档：[LocalSend旗舰极简风格设计系统.md](%USERPROFILE%/Desktop/LocalSend旗舰极简风格设计系统.md)
+- 视觉参考文档：早期本地设计参考（未纳入仓库；当前实现以 `docs/design/` 为准）
 - 当前真实版本号必须从项目的 `pubspec.yaml` 读取；不要相信旧截图，旧手机截图曾显示过 `0.4.1`。
 - Supabase 客户端只可使用 publishable/anon key，绝不能把 `service_role` key 放入客户端、日志或交接文档。
 
@@ -243,7 +243,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ### 已确认的工程事实
 
-- Flutter 工程：`%USERPROFILE%\Documents\Codex\2026-08-14\new-chat-4\sonar_vault`。
+- Flutter 工程：`<repo-root>`。
 - 当前版本：`0.4.8+2027`（`pubspec.yaml`）；Android release APK 也标记为 `0.4.8` / versionCode `2027`，构建时间为 2026-08-15 20:03:38，路径为 `build\app\outputs\flutter-apk\app-release.apk`。
 - 当前副本不含 `.git` 目录，因此不能在该路径核验 `git status`、提交历史或用户未提交修改；这不是“工作区干净”的证据。
 - 程序入口为 `lib\main.dart`；Windows 与 Android 共享 Flutter 入口。Android 已初始化 `audio_service`，但本审计没有验证锁屏、通知栏或后台播放的实际行为。
@@ -295,7 +295,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ### 新增的待执行迁移
 
-- 文件：`%USERPROFILE%\Documents\Codex\2026-08-14\new-chat-4\sonar_vault\supabase\migrations\202608160001_sync_schema_alignment.sql`。
+- 文件：`<repo-root>\supabase\migrations\202608160001_sync_schema_alignment.sql`。
 - 内容：以幂等方式补齐 `profiles.username`、合法历史用户名回填、`cloud_playlist_tracks.updated_at`、同步查询索引、统一 `updated_at` trigger，并将新用户触发器升级为写入账号名。
 - 安全处理：历史用户名无效、已被占用或重复时保留为空，避免唯一索引使迁移整体失败。
 - 验证状态：已完成静态检查；本机没有 Supabase CLI，且为避免未确认修改生产数据库，尚未执行迁移或进行线上写入验证。
@@ -356,7 +356,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ### 已实现
 
-- 客户端版本升至 `0.4.9+2028`，并已构建 Android release APK：`%USERPROFILE%\Documents\Codex\2026-08-14\new-chat-4\sonar_vault\build\app\outputs\flutter-apk\app-release.apk`。
+- 客户端版本升至 `0.4.9+2028`，并已构建 Android release APK：`<repo-root>\build\app\outputs\flutter-apk\app-release.apk`。
 - 云同步卡新增“同步预览”：只拉取曲目/歌单清单，展示将上传、下载、恢复、无变化及超过 50 MiB 跳过的数量；预览不会上传或下载媒体。
 - SQLite 从版本 6 升至 7：本地 `playlists` 新增 `cloud_id`（云端 UUID）和 `updated_at`，并创建唯一索引。旧数据升级时保留原有歌单与时间。
 - 歌单上传不再按名称匹配：本地没有 `cloud_id` 时创建云歌单并回写 UUID；已有 UUID 时只更新同一云记录。
@@ -531,7 +531,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ### 1. 当前版本与未完成验证
 
-- 当前最新 Android 构建为 `0.4.29+2048`，APK：`Sona-0.4.29-release.apk`（168,999,758 bytes）。源码工程仍在：`%USERPROFILE%\\Documents\\Codex\\2026-08-14\\new-chat-4\\sonar_vault`。
+- 当前最新 Android 构建为 `0.4.29+2048`，APK：`Sona-0.4.29-release.apk`（168,999,758 bytes）。当时的源码工程位置已匿名化；当前源码以仓库根目录为准。
 - 该 APK 已通过 **MTP 文件传输**复制到低端测试机 **Galaxy A17 5G** 的 `内部存储/Download`。本次仅复制文件，**没有安装、没有启动、没有打断用户正在使用的应用**。
 - A17 当前未被 ADB 识别（`adb devices` 为空）；不要尝试绕过运营商、设备管理或系统限制。它可以作为 MTP 传文件和低端性能实测机使用。
 - 0.4.29 在 A17 上的实际安装、播放、动画、皮肤与列表视觉检查，仍等待用户自行安装后反馈截图；不能把“构建成功”当成“真机视觉已验收”。
@@ -834,7 +834,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 - `assets/backgrounds/obsidian_rings_player_v2.png`
 - `assets/branding/sona_mark.png`
 - 主题配置：`lib/features/settings/application/appearance_controller.dart`
-- 图标适配脚本：`%USERPROFILE%/Documents/Codex/2026-08-16/new-chat-2/work/build_sona_icons.py`
+- 图标适配脚本：早期本地辅助脚本（未纳入仓库）
 
 ### 3. 本轮获得的设计与生成经验
 
@@ -875,10 +875,10 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ### 2. 当前唯一可信交付基线
 
-- Flutter 仓库：`%USERPROFILE%/Documents/Codex/2026-08-14/new-chat-4/sonar_vault`
+- Flutter 仓库：`<repo-root>`
 - Android applicationId：`com.sonarvault.sonar_vault`
 - 当前版本：`0.4.50+2069`
-- 最终 Android Release APK：`%USERPROFILE%/Documents/Codex/2026-08-16/new-chat-2/outputs/Sona-0.4.50-release.apk`
+- 最终 Android Release APK：`<historical-build-output>/Sona-0.4.50-release.apk`
 - APK 大小：`233,116,571 bytes`
 - APK SHA-256：`DDEF5EF850A5C39E0ED320274ACF560D89DA67DAD7775331585C35CE427EB022`
 - 当前测试手机：Samsung Galaxy S25 Ultra，型号 `SM_S938U1`，ADB 序列号 `RFCY91CM8EX`。
@@ -950,7 +950,7 @@ Sona 的 MVP 已经成立：核心播放价值明确，Windows 和 Android 均�
 
 ## 五十四、Windows 旧曲目移动后的路径恢复（2026-08-17）
 
-- 用户反馈：新导入歌曲可以播放，但旧曲目点击后显示/播放为 0 秒。只读审计确认当前数据库 `%USERPROFILE%\AppData\Roaming\com.sonarvault\Sona\SonarVault\sonar_vault.db` 有 18 首记录，其中 15 首路径失效；旧记录指向 `%USERPROFILE%\Videos\VideoHarvester\...`，实际文件被整理到 `VideoHarvester\mp3` 与 `VideoHarvester\mv` 子目录。
+- 用户反馈：新导入歌曲可以播放，但旧曲目点击后显示/播放为 0 秒。只读审计确认当前数据库 `%APPDATA%\com.sonarvault\Sona\SonarVault\sonar_vault.db` 有 18 首记录，其中 15 首路径失效；旧记录指向 `%USERPROFILE%\Videos\VideoHarvester\...`，实际文件被整理到 `VideoHarvester\mp3` 与 `VideoHarvester\mv` 子目录。
 - 已在常见媒体目录定向查找，并对找到的 10 首候选文件逐首按 SHA-256 与数据库 `content_hash` 核验；10/10 完全一致，可安全恢复。另有 5 首当前未找到，未进行猜测性绑定。
 - 新增 `LibraryDatabase.repairMovedTrackPaths`：Sona 启动时只对失效路径寻找其最近仍存在的父目录，按完整文件名收集候选，再以内容哈希校验后更新本地索引。它不会扫描整盘、不会按同名文件盲目重绑，也不会重复创建歌曲。
 - 播放器新增本地文件存在性校验；仍不可用的条目会提示“本地文件可能被移动或删除”，不再以 0 秒假装可以播放。

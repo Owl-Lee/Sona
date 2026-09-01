@@ -1,6 +1,6 @@
 # Sona Claude 0.1 技术日志
 
-> 项目路径:`%USERPROFILE%\Documents\Codex\2026-08-14\new-chat-4\outputs\Sona-Claude-0.1`
+> 历史项目路径：`<repo-root>`
 > 原则:所有改动只在 `Sona-Claude-0.1` 这个副本上进行,不影响原版 `Sona-src-0.3.2` 及已打包的 Sona 0.3.x 产物。
 
 ---

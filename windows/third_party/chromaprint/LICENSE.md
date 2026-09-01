@@ -1,3 +1,14 @@
+Chromaprint fpcalc 1.6.1 distribution notice
+============================================
+
+This directory contains the unmodified Windows x86_64 `fpcalc.exe` from the
+official Chromaprint 1.6.1 release:
+
+- https://github.com/acoustid/chromaprint/releases/tag/v1.6.1
+- SHA-256: `00DCC56D911F2DEA84737AA9DC8E2D118C9EB7A037D815D1ED001D8593E8FBEE`
+
+The original upstream license notice follows.
+
 License
 =======
 
